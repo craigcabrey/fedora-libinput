@@ -1,5 +1,5 @@
 Name:           libinput
-Version:        0.1.0
+Version:        0.2.0
 Release:        1%{?dist}
 Summary:        Input device library
 
@@ -59,5 +59,8 @@ find $RPM_BUILD_ROOT -name '*.la' -delete
 
 
 %changelog
+* Fri May 23 2014 Peter Hutterer <peter.hutterer@redhat.com> 0.2.0-1
+- libinput 0.2.0
+
 * Fri Feb 28 2014 Kalev Lember <kalevlember@gmail.com> - 0.1.0-1
 - Initial Fedora packaging
