@@ -1,6 +1,6 @@
 Name:           libinput
-Version:        0.2.0
-Release:        2%{?dist}
+Version:        0.4.0
+Release:        1%{?dist}
 Summary:        Input device library
 
 License:        MIT
@@ -59,6 +59,9 @@ find $RPM_BUILD_ROOT -name '*.la' -delete
 
 
 %changelog
+* Wed Jun 25 2014 Kalev Lember <kalevlember@gmail.com> - 0.4.0-1
+- Update to 0.4.0
+
 * Sat Jun 07 2014 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 0.2.0-2
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_21_Mass_Rebuild
 
