@@ -1,13 +1,11 @@
 Name:           libinput
-Version:        0.4.0
-Release:        2%{?dist}
+Version:        0.5.0
+Release:        1%{?dist}
 Summary:        Input device library
 
 License:        MIT
 URL:            http://www.freedesktop.org/wiki/Software/libinput/
 Source0:        http://www.freedesktop.org/software/libinput/libinput-%{version}.tar.xz
-
-Patch01:        0001-touchpad-Switch-to-smooth-simple-acceleration-code-f.patch
 
 BuildRequires:  libevdev-devel
 BuildRequires:  libudev-devel
@@ -33,7 +31,6 @@ developing applications that use %{name}.
 
 %prep
 %setup -q
-%patch01 -p1
 
 %build
 %configure --disable-static
@@ -61,6 +58,9 @@ find $RPM_BUILD_ROOT -name '*.la' -delete
 
 
 %changelog
+* Wed Jul 23 2014 Peter Hutterer <peter.hutterer@redhat.com> 0.5.0-1
+- libinput 0.5.0
+
 * Wed Jul 02 2014 Peter Hutterer <peter.hutterer@redhat.com> 0.4.0-2
 - Add the new touchpad pointer acceleration code
 
