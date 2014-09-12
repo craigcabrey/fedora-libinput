@@ -1,5 +1,5 @@
 Name:           libinput
-Version:        0.5.0
+Version:        0.6.0
 Release:        2%{?dist}
 Summary:        Input device library
 
@@ -58,6 +58,9 @@ find $RPM_BUILD_ROOT -name '*.la' -delete
 
 
 %changelog
+* Fri Sep 12 2014 Peter Hutterer <peter.hutterer@redhat.com> 0.6.0-2
+- libinput 0.6.0
+
 * Sun Aug 17 2014 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 0.5.0-2
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_21_22_Mass_Rebuild
 
