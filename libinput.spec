@@ -1,12 +1,23 @@
+%global gitdate 20141124
+%global gitversion 92d178f16
+
 Name:           libinput
 Version:        0.6.0
-Release:        2%{?dist}
+Release:        3%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 License:        MIT
 URL:            http://www.freedesktop.org/wiki/Software/libinput/
+%if 0%{?gitdate}
+Source0:        %{name}-%{gitdate}.tar.xz
+Source1:        make-git-snapshot.sh
+Source2:        commitid
+%else
 Source0:        http://www.freedesktop.org/software/libinput/libinput-%{version}.tar.xz
+%endif
 
+BuildRequires:  git
+BuildRequires:  autoconf automake libtool pkgconfig
 BuildRequires:  libevdev-devel
 BuildRequires:  libudev-devel
 BuildRequires:  mtdev-devel
@@ -30,10 +41,21 @@ developing applications that use %{name}.
 
 
 %prep
-%setup -q
+%setup -q -n %{name}-%{?gitdate:%{gitdate}}%{!?gitdate:%{version}}
+git init
+if [ -z "$GIT_COMMITTER_NAME" ]; then
+    git config user.email "x@fedoraproject.org"
+    git config user.name "Fedora X Ninjas"
+fi
+git add .
+git commit --allow-empty -a -q -m "%{version} baseline."
+
+# Apply all the patches.
+git am -p1 %{patches} < /dev/null
 
 %build
-%configure --disable-static
+autoreconf -v --install --force || exit 1
+%configure --disable-static --disable-silent-rules
 make %{?_smp_mflags}
 
 
@@ -58,6 +80,11 @@ find $RPM_BUILD_ROOT -name '*.la' -delete
 
 
 %changelog
+* Mon Nov 24 2014 Peter Hutterer <peter.hutterer@redhat.com> 0.6.0-3.20141124git92d178f16
+- Add the hooks to build from a git snapshot
+- Disable silent rules
+- Update to today's git master
+
 * Fri Sep 12 2014 Peter Hutterer <peter.hutterer@redhat.com> 0.6.0-2
 - libinput 0.6.0
 
