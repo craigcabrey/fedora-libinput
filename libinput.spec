@@ -1,9 +1,9 @@
-%global gitdate 20141124
+#global gitdate 20141124
 %global gitversion 92d178f16
 
 Name:           libinput
-Version:        0.6.0
-Release:        3%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Version:        0.7.0
+Release:        1%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 License:        MIT
@@ -80,6 +80,9 @@ find $RPM_BUILD_ROOT -name '*.la' -delete
 
 
 %changelog
+* Fri Dec 05 2014 Peter Hutterer <peter.hutterer@redhat.com> 0.7.0-1
+- libinput 0.7.0
+
 * Mon Nov 24 2014 Peter Hutterer <peter.hutterer@redhat.com> 0.6.0-3.20141124git92d178f16
 - Add the hooks to build from a git snapshot
 - Disable silent rules
