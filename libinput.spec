@@ -1,9 +1,9 @@
-#global gitdate 20141124
-%global gitversion 92d178f16
+%global gitdate 20141211
+%global gitversion 58abea394
 
 Name:           libinput
 Version:        0.7.0
-Release:        1%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Release:        2%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 License:        MIT
@@ -80,6 +80,9 @@ find $RPM_BUILD_ROOT -name '*.la' -delete
 
 
 %changelog
+* Thu Dec 11 2014 Peter Hutterer <peter.hutterer@redhat.com> 0.7.0-2.20141211git58abea394
+- git snapshot, fixes a crasher and fd confusion after suspending a device
+
 * Fri Dec 05 2014 Peter Hutterer <peter.hutterer@redhat.com> 0.7.0-1
 - libinput 0.7.0
 
