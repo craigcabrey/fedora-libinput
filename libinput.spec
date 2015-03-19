@@ -1,9 +1,11 @@
+%global udevdir %(pkg-config --variable=udevdir udev)
+
 #global gitdate 20141211
 %global gitversion 58abea394
 
 Name:           libinput
 Version:        0.12.0
-Release:        1%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Release:        2%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 License:        MIT
@@ -55,7 +57,7 @@ git am -p1 %{patches} < /dev/null
 
 %build
 autoreconf -v --install --force || exit 1
-%configure --disable-static --disable-silent-rules
+%configure --disable-static --disable-silent-rules --with-udev-dir=%{udevdir}
 make %{?_smp_mflags}
 
 
@@ -72,8 +74,8 @@ find $RPM_BUILD_ROOT -name '*.la' -delete
 %files
 %doc COPYING
 %{_libdir}/libinput.so.*
-%{_libdir}/udev/libinput-device-group
-%{_libdir}/udev/rules.d/80-libinput-device-groups.rules
+%{udevdir}/libinput-device-group
+%{udevdir}/rules.d/80-libinput-device-groups.rules
 
 %files devel
 %{_includedir}/libinput.h
@@ -82,6 +84,9 @@ find $RPM_BUILD_ROOT -name '*.la' -delete
 
 
 %changelog
+* Fri Mar 20 2015 Peter Hutterer <peter.hutterer@redhat.com> 0.12.0-2
+- Install the udev rules in the udevdir, not libdir (#1203645)
+
 * Tue Mar 10 2015 Peter Hutterer <peter.hutterer@redhat.com> 0.12.0-1
 - libinput 0.12.0
 
