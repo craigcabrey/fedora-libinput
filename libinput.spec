@@ -4,8 +4,8 @@
 %global gitversion 58abea394
 
 Name:           libinput
-Version:        0.12.0
-Release:        2%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Version:        0.13.0
+Release:        1%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 License:        MIT
@@ -84,6 +84,9 @@ find $RPM_BUILD_ROOT -name '*.la' -delete
 
 
 %changelog
+* Tue Mar 24 2015 Peter Hutterer <peter.hutterer@redhat.com> 0.13.0-1
+- libinput 0.13.0
+
 * Fri Mar 20 2015 Peter Hutterer <peter.hutterer@redhat.com> 0.12.0-2
 - Install the udev rules in the udevdir, not libdir (#1203645)
 
