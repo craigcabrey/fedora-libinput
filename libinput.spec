@@ -5,7 +5,7 @@
 
 Name:           libinput
 Version:        0.13.0
-Release:        1%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Release:        2%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 License:        MIT
@@ -17,6 +17,9 @@ Source2:        commitid
 %else
 Source0:        http://www.freedesktop.org/software/libinput/libinput-%{version}.tar.xz
 %endif
+
+Patch01:        0001-evdev-fix-crash-for-missing-ABS_X-Y.patch
+Patch02:        0002-evdev-fix-handling-of-fake-MT-devices-without-ABS_X-.patch
 
 BuildRequires:  git
 BuildRequires:  autoconf automake libtool pkgconfig
@@ -84,6 +87,9 @@ find $RPM_BUILD_ROOT -name '*.la' -delete
 
 
 %changelog
+* Wed Apr 08 2015 Peter Hutterer <peter.hutterer@redhat.com> 0.13.0-2
+- Fix crasher triggered by fake MT devices without ABS_X/Y (#1207574)
+
 * Tue Mar 24 2015 Peter Hutterer <peter.hutterer@redhat.com> 0.13.0-1
 - libinput 0.13.0
 

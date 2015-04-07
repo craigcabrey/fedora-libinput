@@ -1,0 +1,35 @@
+From 06fbf985f8d63572a0674f1904680d275fe2b2f3 Mon Sep 17 00:00:00 2001
+From: Peter Hutterer <peter.hutterer@who-t.net>
+Date: Wed, 8 Apr 2015 07:43:54 +1000
+Subject: [PATCH libinput] evdev: fix crash for missing ABS_X/Y
+
+libevdev_set_abs_info() is a noop if the event code isn't enabled on the
+device. This leaves ABS_X/Y on NULL, causing a crash later when dereferencing
+the absinfo.
+
+https://bugs.freedesktop.org/show_bug.cgi?id=89783
+
+Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+---
+ src/evdev.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/evdev.c b/src/evdev.c
+index a972b9d..115dc99 100644
+--- a/src/evdev.c
++++ b/src/evdev.c
+@@ -1444,9 +1444,9 @@ evdev_fix_android_mt(struct evdev_device *device)
+ 	    !libevdev_has_event_code(evdev, EV_ABS, ABS_MT_POSITION_Y))
+ 		return;
+ 
+-	libevdev_set_abs_info(evdev, ABS_X,
++	libevdev_enable_event_code(evdev, EV_ABS, ABS_X,
+ 		      libevdev_get_abs_info(evdev, ABS_MT_POSITION_X));
+-	libevdev_set_abs_info(evdev, ABS_Y,
++	libevdev_enable_event_code(evdev, EV_ABS, ABS_Y,
+ 		      libevdev_get_abs_info(evdev, ABS_MT_POSITION_Y));
+ }
+ 
+-- 
+2.3.4
+
