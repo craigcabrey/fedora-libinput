@@ -5,7 +5,7 @@
 
 Name:           libinput
 Version:        0.13.0
-Release:        3%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Release:        4%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 License:        MIT
@@ -21,6 +21,7 @@ Source0:        http://www.freedesktop.org/software/libinput/libinput-%{version}
 Patch01:        0001-evdev-fix-crash-for-missing-ABS_X-Y.patch
 Patch02:        0002-evdev-fix-handling-of-fake-MT-devices-without-ABS_X-.patch
 Patch03:        0001-evdev-fix-inverted-mouse-normalization.patch
+Patch04:        0001-touchpad-delay-fake-finger-processing-until-the-EV_S.patch
 
 BuildRequires:  git
 BuildRequires:  autoconf automake libtool pkgconfig
@@ -88,6 +89,9 @@ find $RPM_BUILD_ROOT -name '*.la' -delete
 
 
 %changelog
+* Thu Apr 09 2015 Peter Hutterer <peter.hutterer@redhat.com> 0.13.0-4
+- Fix finger miscounts on single-touch touchpads (#1209151)
+
 * Wed Apr 08 2015 Peter Hutterer <peter.hutterer@redhat.com> 0.13.0-3
 - Fix mouse slowdown (#1208992)
 

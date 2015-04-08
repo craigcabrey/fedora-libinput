@@ -1,0 +1,66 @@
+From 82dc1fae18038d04506e154fb36af66bc66c8960 Mon Sep 17 00:00:00 2001
+From: Peter Hutterer <peter.hutterer@who-t.net>
+Date: Wed, 8 Apr 2015 17:00:50 +1000
+Subject: [PATCH libinput] touchpad: delay fake finger processing until the
+ EV_SYN
+
+A switch from BTN_TOOL_FINGER to BTN_TOOL_DOUBLETAP sets the former to 0, then
+the latter to 1, within the same frame. In the previous code we'd end the
+first touchpoint, then start two new ones immediately after when the DOUBLETAP
+comes in. This causes bug notices in the edge scrolling code and finger
+miscounts in the tapping code (since neither processes the change, there is no
+SYN_REPORT between the two).
+
+Only update the state bits when we get the events, handle the fake touch
+sequence start/end on SYN_REPORT instead.
+
+https://bugs.freedesktop.org/show_bug.cgi?id=89949
+
+Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+---
+ src/evdev-mt-touchpad.c | 10 ++++------
+ 1 file changed, 4 insertions(+), 6 deletions(-)
+
+diff --git a/src/evdev-mt-touchpad.c b/src/evdev-mt-touchpad.c
+index 7d6d838..724fd32 100644
+--- a/src/evdev-mt-touchpad.c
++++ b/src/evdev-mt-touchpad.c
+@@ -317,16 +317,13 @@ tp_process_absolute_st(struct tp_dispatch *tp,
+ }
+ 
+ static void
+-tp_process_fake_touch(struct tp_dispatch *tp,
+-		      const struct input_event *e,
+-		      uint64_t time)
++tp_process_fake_touches(struct tp_dispatch *tp,
++			uint64_t time)
+ {
+ 	struct tp_touch *t;
+ 	unsigned int nfake_touches;
+ 	unsigned int i, start;
+ 
+-	tp_fake_finger_set(tp, e->code, e->value != 0);
+-
+ 	nfake_touches = tp_fake_finger_count(tp);
+ 
+ 	start = tp->has_mt ? tp->real_touches : 0;
+@@ -390,7 +387,7 @@ tp_process_key(struct tp_dispatch *tp,
+ 		case BTN_TOOL_DOUBLETAP:
+ 		case BTN_TOOL_TRIPLETAP:
+ 		case BTN_TOOL_QUADTAP:
+-			tp_process_fake_touch(tp, e, time);
++			tp_fake_finger_set(tp, e->code, !!e->value);
+ 			break;
+ 		case BTN_0:
+ 		case BTN_1:
+@@ -548,6 +545,7 @@ tp_process_state(struct tp_dispatch *tp, uint64_t time)
+ 	struct tp_touch *first = tp_get_touch(tp, 0);
+ 	unsigned int i;
+ 
++	tp_process_fake_touches(tp, time);
+ 	tp_unhover_touches(tp, time);
+ 
+ 	for (i = 0; i < tp->ntouches; i++) {
+-- 
+2.3.4
+
