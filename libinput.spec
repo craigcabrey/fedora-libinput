@@ -5,7 +5,7 @@
 
 Name:           libinput
 Version:        0.13.0
-Release:        2%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Release:        3%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 License:        MIT
@@ -20,6 +20,7 @@ Source0:        http://www.freedesktop.org/software/libinput/libinput-%{version}
 
 Patch01:        0001-evdev-fix-crash-for-missing-ABS_X-Y.patch
 Patch02:        0002-evdev-fix-handling-of-fake-MT-devices-without-ABS_X-.patch
+Patch03:        0001-evdev-fix-inverted-mouse-normalization.patch
 
 BuildRequires:  git
 BuildRequires:  autoconf automake libtool pkgconfig
@@ -87,6 +88,9 @@ find $RPM_BUILD_ROOT -name '*.la' -delete
 
 
 %changelog
+* Wed Apr 08 2015 Peter Hutterer <peter.hutterer@redhat.com> 0.13.0-3
+- Fix mouse slowdown (#1208992)
+
 * Wed Apr 08 2015 Peter Hutterer <peter.hutterer@redhat.com> 0.13.0-2
 - Fix crasher triggered by fake MT devices without ABS_X/Y (#1207574)
 
