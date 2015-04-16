@@ -5,7 +5,7 @@
 
 Name:           libinput
 Version:        0.13.0
-Release:        5%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Release:        6%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 License:        MIT
@@ -91,6 +91,9 @@ find $RPM_BUILD_ROOT -name '*.la' -delete
 
 
 %changelog
+* Thu Apr 16 2015 Peter Hutterer <peter.hutterer@redhat.com> 0.13.0-6
+- git add the patch...
+
 * Thu Apr 16 2015 Peter Hutterer <peter.hutterer@redhat.com> 0.13.0-5
 - Reduce palm detection threshold to 70mm (#1209753)
 - Don't allow taps in the top part of the palm zone (#1209753)
