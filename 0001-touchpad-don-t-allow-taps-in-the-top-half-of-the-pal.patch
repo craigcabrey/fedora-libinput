@@ -1,0 +1,456 @@
+From c03ce1cab3c19dabd12d7b0886a9ef98107a958e Mon Sep 17 00:00:00 2001
+From: Peter Hutterer <peter.hutterer@who-t.net>
+Date: Wed, 15 Apr 2015 15:21:08 +1000
+Subject: [PATCH] touchpad: don't allow taps in the top half of the palm
+ exclusion zone.
+
+Touches in the exclusion zone are ignored for palm detection and don't move
+the cursor. Tapping however triggers before we know whether something is a
+palm or not, so we get erroneous button clickst.
+
+If a tap happens in the top half of the touchpad, within the palm exclusion
+zones, ignore it for tap purposes. To avoid further complicating the state
+machine simply pretend there was a movement > threshold on that finger. This
+advances the tap state machine properly that no button events are sent for
+this finger.
+
+https://bugs.freedesktop.org/show_bug.cgi?id=89625
+
+Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+Reviewed-by: Hans de Goede <hdegoede@redhat.com>
+---
+ doc/palm-detection.dox      |   9 ++
+ doc/svg/palm-detection.svg  | 213 ++++++++++++++++++++++++++++++++------------
+ src/evdev-mt-touchpad-tap.c |   8 ++
+ src/evdev-mt-touchpad.c     |  24 ++++-
+ src/evdev-mt-touchpad.h     |   4 +
+ test/touchpad.c             |  44 +++++++++
+ 6 files changed, 244 insertions(+), 58 deletions(-)
+
+diff --git a/doc/palm-detection.dox b/doc/palm-detection.dox
+index 4e839e6..a5b578b 100644
+--- a/doc/palm-detection.dox
++++ b/doc/palm-detection.dox
+@@ -23,6 +23,10 @@ screen, it is common for a finger to start inside an exclusion zone and move
+ rapidly across the touchpad. libinput detects such movements and avoids palm
+ detection on such touch sequences.
+ 
++Each exclusion zone is divided into a top part and a bottom part. A touch
++starting in the top part of the exclusion zone does not trigger a
++tap (see @ref tapping).
++
+ In the diagram below, the exclusion zones are painted red.
+ Touch 'A' starts inside the exclusion zone and moves
+ almost vertically. It is considered a palm and ignored for cursor movement,
+@@ -31,6 +35,11 @@ despite moving out of the exclusion zone.
+ Touch 'B' starts inside the exclusion zone but moves horizontally out of the
+ zone. It is considered a valid touch and controls the cursor.
+ 
++Touch 'C' occurs in the top part of the exclusion zone. Despite being a
++tapping motion, it does not generate an emulated button event. Touch 'D'
++likewise occurs within the exclusion zone but in the bottom half. libinput
++will generate a button event for this touch.
++
+ @image html palm-detection.svg
+ 
+ @section trackpoint-disabling Palm detection during trackpoint use
+diff --git a/doc/svg/palm-detection.svg b/doc/svg/palm-detection.svg
+index 9fb6077..c3e45f4 100644
+--- a/doc/svg/palm-detection.svg
++++ b/doc/svg/palm-detection.svg
+@@ -2,15 +2,67 @@
+ <!-- Created with Inkscape (http://www.inkscape.org/) -->
+ 
+ <svg
++   xmlns:dc="http://purl.org/dc/elements/1.1/"
++   xmlns:cc="http://creativecommons.org/ns#"
++   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    xmlns:svg="http://www.w3.org/2000/svg"
+    xmlns="http://www.w3.org/2000/svg"
++   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
++   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+    version="1.1"
+    width="393.62857"
+    height="268.62857"
+-   id="svg2">
++   id="svg2"
++   inkscape:version="0.91 r13725"
++   sodipodi:docname="palm-detection.svg">
++  <metadata
++     id="metadata3479">
++    <rdf:RDF>
++      <cc:Work
++         rdf:about="">
++        <dc:format>image/svg+xml</dc:format>
++        <dc:type
++           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
++      </cc:Work>
++    </rdf:RDF>
++  </metadata>
++  <sodipodi:namedview
++     pagecolor="#ffffff"
++     bordercolor="#666666"
++     borderopacity="1"
++     objecttolerance="10"
++     gridtolerance="10"
++     guidetolerance="10"
++     inkscape:pageopacity="0"
++     inkscape:pageshadow="2"
++     inkscape:window-width="1920"
++     inkscape:window-height="1136"
++     id="namedview3477"
++     showgrid="false"
++     inkscape:zoom="3.5662625"
++     inkscape:cx="199.35048"
++     inkscape:cy="156.74673"
++     inkscape:window-x="0"
++     inkscape:window-y="27"
++     inkscape:window-maximized="1"
++     inkscape:current-layer="svg2" />
+   <defs
+      id="defs4">
+     <marker
++       inkscape:stockid="Arrow1Lstart"
++       orient="auto"
++       refY="0.0"
++       refX="0.0"
++       id="marker4663"
++       style="overflow:visible"
++       inkscape:isstock="true">
++      <path
++         id="path4407"
++         d="M 0.0,0.0 L 5.0,-5.0 L -12.5,0.0 L 5.0,5.0 L 0.0,0.0 z "
++         style="fill-rule:evenodd;stroke:#000000;stroke-width:1pt;stroke-opacity:1;fill:#000000;fill-opacity:1"
++         transform="scale(0.8) translate(12.5,0)" />
++    </marker>
++    <marker
+        refX="0"
+        refY="0"
+        orient="auto"
+@@ -59,64 +111,111 @@
+          style="fill-rule:evenodd;stroke:#000000;stroke-width:1pt;marker-start:none" />
+     </marker>
+   </defs>
+-  <g
+-     transform="translate(343.95712,-527.33359)"
+-     id="layer3"
+-     style="display:inline">
+-    <rect
+-       width="386.42856"
+-       height="261.42856"
+-       x="-340.35712"
+-       y="530.93359"
+-       id="rect2858-0"
+-       style="color:#000000;fill:#b3b3b3;fill-opacity:1;fill-rule:nonzero;stroke:#000000;stroke-width:7.20000076;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;marker:none;visibility:visible;display:inline;overflow:visible;enable-background:accumulate" />
+-    <rect
+-       width="65.281105"
+-       height="254.3844"
+-       x="-336.88608"
+-       y="534.46918"
+-       id="rect12924"
+-       style="color:#000000;fill:#ff0000;fill-opacity:0.32017547;fill-rule:nonzero;stroke:none;stroke-width:3.5;marker:none;visibility:visible;display:inline;overflow:visible;enable-background:accumulate" />
+-    <rect
+-       width="65.281105"
+-       height="254.3844"
+-       x="-22.72864"
+-       y="534.21661"
+-       id="rect13482"
+-       style="color:#000000;fill:#ff0000;fill-opacity:0.32017547;fill-rule:nonzero;stroke:none;stroke-width:3.5;marker:none;visibility:visible;display:inline;overflow:visible;enable-background:accumulate" />
+-    <path
+-       d="m 38.928571,67.914286 c 0,0 3.508205,24.810617 9.642857,57.857144 6.134651,33.04652 23.277202,79.68584 89.642852,90.35714"
+-       transform="translate(-343.95712,527.33359)"
+-       id="path13492"
+-       style="fill:none;stroke:#000000;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:6, 1;stroke-dashoffset:0;marker-mid:none;marker-end:url(#Arrow1Lend-2)" />
+-    <text
+-       x="-310.74283"
+-       y="590.96222"
+-       id="text13874"
+-       xml:space="preserve"
+-       style="font-size:12px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:100%;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:Utopia;-inkscape-font-specification:Utopia"><tspan
+-         x="-310.74283"
+-         y="590.96222"
+-         id="tspan13876"
+-         style="font-size:18px;font-family:Arial;-inkscape-font-specification:Arial">A</tspan></text>
+-    <text
+-       x="7.8971062"
+-       y="626.08258"
+-       id="text13874-8"
+-       xml:space="preserve"
+-       style="font-size:12px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:100%;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;display:inline;font-family:Utopia;-inkscape-font-specification:Utopia"><tspan
+-         x="7.8971062"
+-         y="626.08258"
+-         id="tspan13876-7"
+-         style="font-size:18px;font-family:Arial;-inkscape-font-specification:Arial">B</tspan></text>
+-    <path
+-       d="m 347.5,90.414286 c 0,0 -28.20972,-6.408104 -85,-6.071429 -22.06971,0.130838 -66.07143,4.285715 -66.07143,4.285715"
+-       transform="translate(-343.95712,527.33359)"
+-       id="path13903"
+-       style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;marker-end:url(#Arrow1Lend-2)" />
+-  </g>
++  <rect
++     style="color:#000000;display:inline;overflow:visible;visibility:visible;fill:#b3b3b3;fill-opacity:1;fill-rule:nonzero;stroke:#000000;stroke-width:7.20000076;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker:none;enable-background:accumulate"
++     id="rect2858-0"
++     y="3.6000037"
++     x="3.6000032"
++     height="261.42856"
++     width="386.42856" />
++  <rect
++     style="color:#000000;display:inline;overflow:visible;visibility:visible;fill:#ff0000;fill-opacity:0.32017547;fill-rule:nonzero;stroke:none;stroke-width:3.5;marker:none;enable-background:accumulate"
++     id="rect12924"
++     y="7.1355872"
++     x="7.0710421"
++     height="254.3844"
++     width="65.281105" />
++  <rect
++     style="color:#000000;display:inline;overflow:visible;visibility:visible;fill:#ff0000;fill-opacity:0.32017547;fill-rule:nonzero;stroke:none;stroke-width:3.5;marker:none;enable-background:accumulate"
++     id="rect13482"
++     y="6.8830237"
++     x="321.22849"
++     height="254.3844"
++     width="65.281105" />
++  <path
++     inkscape:connector-curvature="0"
++     style="fill:none;stroke:#000000;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:6, 1;stroke-dashoffset:0;stroke-opacity:1;marker-mid:none;marker-end:url(#Arrow1Lend-2)"
++     id="path13492"
++     d="m 38.928571,67.914286 c 0,0 3.508205,24.810617 9.642857,57.857144 6.134651,33.04652 23.277202,79.68584 89.642852,90.35714" />
++  <rect
++     style="fill:#000000;fill-opacity:0.3559322;fill-rule:evenodd;stroke:none;stroke-width:3.30527353px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
++     id="rect3490"
++     width="65.272476"
++     height="136.21509"
++     x="7.0411549"
++     y="7.0411549" />
++  <text
++     sodipodi:linespacing="100%"
++     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;line-height:100%;font-family:Utopia;-inkscape-font-specification:Utopia;text-align:start;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none"
++     xml:space="preserve"
++     id="text13874"
++     y="63.628628"
++     x="33.214291"><tspan
++       style="font-size:18px;font-family:Arial;-inkscape-font-specification:Arial"
++       id="tspan13876"
++       y="63.628628"
++       x="33.214291">A</tspan></text>
++  <rect
++     style="fill:#000000;fill-opacity:0.3559322;fill-rule:evenodd;stroke:none;stroke-width:3.30527353px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
++     id="rect3490-2"
++     width="65.272476"
++     height="136.21509"
++     x="321.23563"
++     y="6.7607527" />
++  <text
++     sodipodi:linespacing="100%"
++     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;line-height:100%;font-family:Utopia;-inkscape-font-specification:Utopia;text-align:start;writing-mode:lr-tb;text-anchor:start;display:inline;fill:#000000;fill-opacity:1;stroke:none"
++     xml:space="preserve"
++     id="text13874-8"
++     y="98.748993"
++     x="351.85422"><tspan
++       style="font-size:18px;font-family:Arial;-inkscape-font-specification:Arial"
++       id="tspan13876-7"
++       y="98.748993"
++       x="351.85422">B</tspan></text>
++  <path
++     inkscape:connector-curvature="0"
++     style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;marker-end:url(#Arrow1Lend-2)"
++     id="path13903"
++     d="m 347.5,90.414286 c 0,0 -28.20972,-6.408104 -85,-6.071429 -22.06971,0.130838 -66.07143,4.285715 -66.07143,4.285715" />
+   <g
+      transform="translate(343.95712,-527.33359)"
+      id="layer1"
+      style="display:inline" />
++  <text
++     sodipodi:linespacing="100%"
++     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;line-height:100%;font-family:Utopia;-inkscape-font-specification:Utopia;text-align:start;writing-mode:lr-tb;text-anchor:start;display:inline;fill:#000000;fill-opacity:1;stroke:none"
++     xml:space="preserve"
++     id="text13874-8-1"
++     y="46.009491"
++     x="342.27759"><tspan
++       style="font-size:18px;font-family:Arial;-inkscape-font-specification:Arial"
++       id="tspan13876-7-9"
++       y="46.009491"
++       x="342.27759">C</tspan></text>
++  <text
++     sodipodi:linespacing="100%"
++     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;line-height:100%;font-family:Utopia;-inkscape-font-specification:Utopia;text-align:start;writing-mode:lr-tb;text-anchor:start;display:inline;fill:#000000;fill-opacity:1;stroke:none"
++     xml:space="preserve"
++     id="text13874-8-1-4"
++     y="215.65927"
++     x="37.970726"><tspan
++       style="font-size:18px;font-family:Arial;-inkscape-font-specification:Arial"
++       id="tspan13876-7-9-5"
++       y="215.65927"
++       x="37.970726">D</tspan></text>
++  <circle
++     style="fill:#000000;fill-opacity:1;stroke:none;stroke-opacity:1"
++     id="path4401"
++     cx="-360.181"
++     cy="24.53549"
++     r="4.0658817"
++     transform="scale(-1,1)" />
++  <circle
++     style="fill:#000000;fill-opacity:1;stroke:none;stroke-opacity:1"
++     id="path4401-9"
++     cx="-36.452721"
++     cy="194.8819"
++     r="4.0658817"
++     transform="scale(-1,1)" />
+ </svg>
+diff --git a/src/evdev-mt-touchpad-tap.c b/src/evdev-mt-touchpad-tap.c
+index 6bd7c58..ae66c22 100644
+--- a/src/evdev-mt-touchpad-tap.c
++++ b/src/evdev-mt-touchpad-tap.c
+@@ -575,6 +575,14 @@ tp_tap_handle_state(struct tp_dispatch *tp, uint64_t time)
+ 			t->tap.state = TAP_TOUCH_STATE_TOUCH;
+ 			t->tap.initial = t->point;
+ 			tp_tap_handle_event(tp, t, TAP_EVENT_TOUCH, time);
++
++			/* If we think this is a palm, pretend there's a
++			 * motion event which will prevent tap clicks
++			 * without requiring extra states in the FSM.
++			 */
++			if (tp_palm_tap_is_palm(tp, t))
++				tp_tap_handle_event(tp, t, TAP_EVENT_MOTION, time);
++
+ 		} else if (t->state == TOUCH_END) {
+ 			tp_tap_handle_event(tp, t, TAP_EVENT_RELEASE, time);
+ 			t->tap.state = TAP_TOUCH_STATE_IDLE;
+diff --git a/src/evdev-mt-touchpad.c b/src/evdev-mt-touchpad.c
+index 356133f..53d80b2 100644
+--- a/src/evdev-mt-touchpad.c
++++ b/src/evdev-mt-touchpad.c
+@@ -458,6 +458,24 @@ tp_touch_active(struct tp_dispatch *tp, struct tp_touch *t)
+ 		tp_edge_scroll_touch_active(tp, t);
+ }
+ 
++bool
++tp_palm_tap_is_palm(struct tp_dispatch *tp, struct tp_touch *t)
++{
++	if (t->state != TOUCH_BEGIN)
++		return false;
++
++	if (t->point.x > tp->palm.left_edge &&
++	    t->point.x < tp->palm.right_edge)
++		return false;
++
++	/* We're inside the left/right palm edge and in the northern half of
++	 * the touchpad - this tap is a palm */
++	if (t->point.y < tp->palm.vert_center)
++		return true;
++
++	return false;
++}
++
+ static void
+ tp_palm_detect(struct tp_dispatch *tp, struct tp_touch *t, uint64_t time)
+ {
+@@ -1084,13 +1102,16 @@ static int
+ tp_init_palmdetect(struct tp_dispatch *tp,
+ 		   struct evdev_device *device)
+ {
+-	int width;
++	int width, height;
+ 
+ 	tp->palm.right_edge = INT_MAX;
+ 	tp->palm.left_edge = INT_MIN;
++	tp->palm.vert_center = INT_MIN;
+ 
+ 	width = abs(device->abs.absinfo_x->maximum -
+ 		    device->abs.absinfo_x->minimum);
++	height = abs(device->abs.absinfo_y->maximum -
++		    device->abs.absinfo_y->minimum);
+ 
+ 	/* Apple touchpads are always big enough to warrant palm detection */
+ 	if (evdev_device_get_id_vendor(device) != VENDOR_ID_APPLE) {
+@@ -1107,6 +1128,7 @@ tp_init_palmdetect(struct tp_dispatch *tp,
+ 	/* palm edges are 5% of the width on each side */
+ 	tp->palm.right_edge = device->abs.absinfo_x->maximum - width * 0.05;
+ 	tp->palm.left_edge = device->abs.absinfo_x->minimum + width * 0.05;
++	tp->palm.vert_center = device->abs.absinfo_y->minimum + height/2;
+ 
+ 	return 0;
+ }
+diff --git a/src/evdev-mt-touchpad.h b/src/evdev-mt-touchpad.h
+index 9980f90..6de999f 100644
+--- a/src/evdev-mt-touchpad.h
++++ b/src/evdev-mt-touchpad.h
+@@ -260,6 +260,7 @@ struct tp_dispatch {
+ 	struct {
+ 		int32_t right_edge;		/* in device coordinates */
+ 		int32_t left_edge;		/* in device coordinates */
++		int32_t vert_center;		/* in device coordinates */
+ 	} palm;
+ 
+ 	struct {
+@@ -385,4 +386,7 @@ tp_gesture_post_events(struct tp_dispatch *tp, uint64_t time);
+ void
+ tp_gesture_stop_twofinger_scroll(struct tp_dispatch *tp, uint64_t time);
+ 
++bool
++tp_palm_tap_is_palm(struct tp_dispatch *tp, struct tp_touch *t);
++
+ #endif
+diff --git a/test/touchpad.c b/test/touchpad.c
+index 6fa2301..882e689 100644
+--- a/test/touchpad.c
++++ b/test/touchpad.c
+@@ -2399,6 +2399,49 @@ START_TEST(touchpad_palm_detect_no_palm_moving_into_edges)
+ }
+ END_TEST
+ 
++START_TEST(touchpad_palm_detect_tap)
++{
++	struct litest_device *dev = litest_current_device();
++	struct libinput *li = dev->libinput;
++
++	if (!touchpad_has_palm_detect_size(dev))
++		return;
++
++	libinput_device_config_tap_set_enabled(dev->libinput_device,
++					       LIBINPUT_CONFIG_TAP_ENABLED);
++
++	litest_drain_events(li);
++
++	litest_touch_down(dev, 0, 95, 5);
++	litest_touch_up(dev, 0);
++	litest_assert_empty_queue(li);
++
++	litest_touch_down(dev, 0, 5, 5);
++	litest_touch_up(dev, 0);
++	litest_assert_empty_queue(li);
++
++	litest_touch_down(dev, 0, 5, 90);
++	litest_touch_up(dev, 0);
++	litest_assert_button_event(li,
++				   BTN_LEFT,
++				   LIBINPUT_BUTTON_STATE_PRESSED);
++	litest_assert_button_event(li,
++				   BTN_LEFT,
++				   LIBINPUT_BUTTON_STATE_RELEASED);
++	litest_assert_empty_queue(li);
++
++	litest_touch_down(dev, 0, 95, 90);
++	litest_touch_up(dev, 0);
++	litest_assert_button_event(li,
++				   BTN_LEFT,
++				   LIBINPUT_BUTTON_STATE_PRESSED);
++	litest_assert_button_event(li,
++				   BTN_LEFT,
++				   LIBINPUT_BUTTON_STATE_RELEASED);
++	litest_assert_empty_queue(li);
++}
++END_TEST
++
+ START_TEST(touchpad_left_handed)
+ {
+ 	struct litest_device *dev = litest_current_device();
+@@ -3448,6 +3491,7 @@ int main(int argc, char **argv) {
+ 	litest_add("touchpad:palm", touchpad_palm_detect_palm_becomes_pointer, LITEST_TOUCHPAD, LITEST_ANY);
+ 	litest_add("touchpad:palm", touchpad_palm_detect_palm_stays_palm, LITEST_TOUCHPAD, LITEST_ANY);
+ 	litest_add("touchpad:palm", touchpad_palm_detect_no_palm_moving_into_edges, LITEST_TOUCHPAD, LITEST_ANY);
++	litest_add("touchpad:palm", touchpad_palm_detect_tap, LITEST_TOUCHPAD, LITEST_ANY);
+ 
+ 	litest_add("touchpad:left-handed", touchpad_left_handed, LITEST_TOUCHPAD|LITEST_BUTTON, LITEST_CLICKPAD);
+ 	litest_add("touchpad:left-handed", touchpad_left_handed_clickpad, LITEST_CLICKPAD, LITEST_APPLE_CLICKPAD);
+-- 
+2.3.4
+

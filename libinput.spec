@@ -5,7 +5,7 @@
 
 Name:           libinput
 Version:        0.13.0
-Release:        4%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Release:        5%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 License:        MIT
@@ -22,6 +22,8 @@ Patch01:        0001-evdev-fix-crash-for-missing-ABS_X-Y.patch
 Patch02:        0002-evdev-fix-handling-of-fake-MT-devices-without-ABS_X-.patch
 Patch03:        0001-evdev-fix-inverted-mouse-normalization.patch
 Patch04:        0001-touchpad-delay-fake-finger-processing-until-the-EV_S.patch
+Patch05:        0001-touchpad-Reduce-palm-detection-threshold-to-70mm.patch
+Patch06:        0001-touchpad-don-t-allow-taps-in-the-top-half-of-the-pal.patch
 
 BuildRequires:  git
 BuildRequires:  autoconf automake libtool pkgconfig
@@ -89,6 +91,10 @@ find $RPM_BUILD_ROOT -name '*.la' -delete
 
 
 %changelog
+* Thu Apr 16 2015 Peter Hutterer <peter.hutterer@redhat.com> 0.13.0-5
+- Reduce palm detection threshold to 70mm (#1209753)
+- Don't allow taps in the top part of the palm zone (#1209753)
+
 * Thu Apr 09 2015 Peter Hutterer <peter.hutterer@redhat.com> 0.13.0-4
 - Fix finger miscounts on single-touch touchpads (#1209151)
 
