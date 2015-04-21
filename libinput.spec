@@ -4,8 +4,8 @@
 %global gitversion 58abea394
 
 Name:           libinput
-Version:        0.13.0
-Release:        6%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Version:        0.14.1
+Release:        1%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 License:        MIT
@@ -17,13 +17,6 @@ Source2:        commitid
 %else
 Source0:        http://www.freedesktop.org/software/libinput/libinput-%{version}.tar.xz
 %endif
-
-Patch01:        0001-evdev-fix-crash-for-missing-ABS_X-Y.patch
-Patch02:        0002-evdev-fix-handling-of-fake-MT-devices-without-ABS_X-.patch
-Patch03:        0001-evdev-fix-inverted-mouse-normalization.patch
-Patch04:        0001-touchpad-delay-fake-finger-processing-until-the-EV_S.patch
-Patch05:        0001-touchpad-Reduce-palm-detection-threshold-to-70mm.patch
-Patch06:        0001-touchpad-don-t-allow-taps-in-the-top-half-of-the-pal.patch
 
 BuildRequires:  git
 BuildRequires:  autoconf automake libtool pkgconfig
@@ -83,6 +76,8 @@ find $RPM_BUILD_ROOT -name '*.la' -delete
 %{_libdir}/libinput.so.*
 %{udevdir}/libinput-device-group
 %{udevdir}/rules.d/80-libinput-device-groups.rules
+%{_bindir}/libinput-list-devices
+%{_mandir}/man1/libinput-list-devices.1*
 
 %files devel
 %{_includedir}/libinput.h
@@ -91,6 +86,9 @@ find $RPM_BUILD_ROOT -name '*.la' -delete
 
 
 %changelog
+* Wed Apr 22 2015 Peter Hutterer <peter.hutterer@redhat.com> 0.14.1-1
+- libinput 0.14.1
+
 * Thu Apr 16 2015 Peter Hutterer <peter.hutterer@redhat.com> 0.13.0-6
 - git add the patch...
 
