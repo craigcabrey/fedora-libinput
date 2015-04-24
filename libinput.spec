@@ -5,7 +5,7 @@
 
 Name:           libinput
 Version:        0.14.1
-Release:        1%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Release:        2%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 License:        MIT
@@ -17,6 +17,8 @@ Source2:        commitid
 %else
 Source0:        http://www.freedesktop.org/software/libinput/libinput-%{version}.tar.xz
 %endif
+
+Patch01:        0001-evdev-init-pointer-accel-filters-when-we-have-rel-x-.patch
 
 BuildRequires:  git
 BuildRequires:  autoconf automake libtool pkgconfig
@@ -86,6 +88,9 @@ find $RPM_BUILD_ROOT -name '*.la' -delete
 
 
 %changelog
+* Fri Apr 24 2015 Peter Hutterer <peter.hutterer@redhat.com> 0.14.1-2
+- Fix crash with the MS Surface Type Cover (#1206869)
+
 * Wed Apr 22 2015 Peter Hutterer <peter.hutterer@redhat.com> 0.14.1-1
 - libinput 0.14.1
 
