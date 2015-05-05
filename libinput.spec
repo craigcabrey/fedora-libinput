@@ -4,8 +4,8 @@
 %global gitversion 58abea394
 
 Name:           libinput
-Version:        0.14.1
-Release:        2%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Version:        0.15.0
+Release:        1%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 License:        MIT
@@ -17,8 +17,6 @@ Source2:        commitid
 %else
 Source0:        http://www.freedesktop.org/software/libinput/libinput-%{version}.tar.xz
 %endif
-
-Patch01:        0001-evdev-init-pointer-accel-filters-when-we-have-rel-x-.patch
 
 BuildRequires:  git
 BuildRequires:  autoconf automake libtool pkgconfig
@@ -68,7 +66,9 @@ make %{?_smp_mflags}
 find $RPM_BUILD_ROOT -name '*.la' -delete
 
 
-%post -p /sbin/ldconfig
+%post
+/sbin/ldconfig
+/usr/bin/udevadm hwdb --update  >/dev/null 2>&1 || :
 
 %postun -p /sbin/ldconfig
 
@@ -78,8 +78,13 @@ find $RPM_BUILD_ROOT -name '*.la' -delete
 %{_libdir}/libinput.so.*
 %{udevdir}/libinput-device-group
 %{udevdir}/rules.d/80-libinput-device-groups.rules
+%{udevdir}/rules.d/80-libinput-device-groups.rules
+%{udevdir}/rules.d/90-libinput-model-quirks.rules
+%{udevdir}/hwdb.d/90-libinput-model-quirks.hwdb
 %{_bindir}/libinput-list-devices
+%{_bindir}/libinput-debug-events
 %{_mandir}/man1/libinput-list-devices.1*
+%{_mandir}/man1/libinput-debug-events.1*
 
 %files devel
 %{_includedir}/libinput.h
@@ -88,6 +93,9 @@ find $RPM_BUILD_ROOT -name '*.la' -delete
 
 
 %changelog
+* Tue May 05 2015 Peter Hutterer <peter.hutterer@redhat.com> 0.15.0-1
+- libinput 0.15.0
+
 * Fri Apr 24 2015 Peter Hutterer <peter.hutterer@redhat.com> 0.14.1-2
 - Fix crash with the MS Surface Type Cover (#1206869)
 
