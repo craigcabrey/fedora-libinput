@@ -1,0 +1,209 @@
+From d02b670e3796c10fa75b94165886901a0a0c41f4 Mon Sep 17 00:00:00 2001
+From: Peter Hutterer <peter.hutterer@who-t.net>
+Date: Mon, 20 Apr 2015 15:51:20 +1000
+Subject: [PATCH libinput 2/3] touchpad: add timeout-based disable-while-typing
+
+On some touchpads, typing triggers touches in areas of the touchpad that
+cannot easily be distinguished from other fingers. Pressure information is
+useless too, so we have to go back to a timeout-based handling of touch data.
+
+If we see non-modifier key events, disable the touchpad for a timeout and set
+any touches starting during that timeout as palm.
+
+Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+Reviewed-by: Hans de Goede <hdegoede@redhat.com>
+---
+ src/evdev-mt-touchpad.c | 90 +++++++++++++++++++++++++++++++++++++++++++++++--
+ src/evdev-mt-touchpad.h |  7 ++++
+ 2 files changed, 94 insertions(+), 3 deletions(-)
+
+diff --git a/src/evdev-mt-touchpad.c b/src/evdev-mt-touchpad.c
+index d8b44fa..32d8e25 100644
+--- a/src/evdev-mt-touchpad.c
++++ b/src/evdev-mt-touchpad.c
+@@ -34,6 +34,7 @@
+ #define DEFAULT_ACCEL_NUMERATOR 3000.0
+ #define DEFAULT_HYSTERESIS_MARGIN_DENOMINATOR 700.0
+ #define DEFAULT_TRACKPOINT_ACTIVITY_TIMEOUT 500 /* ms */
++#define DEFAULT_KEYBOARD_ACTIVITY_TIMEOUT 500 /* ms */
+ #define FAKE_FINGER_OVERFLOW (1 << 7)
+ 
+ static inline int
+@@ -487,6 +488,14 @@ tp_palm_detect(struct tp_dispatch *tp, struct tp_touch *t, uint64_t time)
+ 	struct device_float_coords delta;
+ 	int dirs;
+ 
++	if (tp->sendevents.keyboard_active &&
++	    t->state == TOUCH_BEGIN) {
++		t->palm.state = PALM_TYPING;
++		t->palm.time = time;
++		t->palm.first = t->point;
++		return;
++	}
++
+ 	/* If labelled a touch as palm, we unlabel as palm when
+ 	   we move out of the palm edge zone within the timeout, provided
+ 	   the direction is within 45 degrees of the horizontal.
+@@ -705,7 +714,9 @@ tp_post_events(struct tp_dispatch *tp, uint64_t time)
+ 	filter_motion |= tp_tap_handle_state(tp, time);
+ 	filter_motion |= tp_post_button_events(tp, time);
+ 
+-	if (filter_motion || tp->sendevents.trackpoint_active) {
++	if (filter_motion ||
++	    tp->sendevents.trackpoint_active ||
++	    tp->sendevents.keyboard_active) {
+ 		tp_edge_scroll_stop_events(tp, time);
+ 		tp_gesture_stop(tp, time);
+ 		return;
+@@ -755,10 +766,15 @@ static void
+ tp_remove_sendevents(struct tp_dispatch *tp)
+ {
+ 	libinput_timer_cancel(&tp->sendevents.trackpoint_timer);
++	libinput_timer_cancel(&tp->sendevents.keyboard_timer);
+ 
+ 	if (tp->buttons.trackpoint)
+ 		libinput_device_remove_event_listener(
+ 					&tp->sendevents.trackpoint_listener);
++
++	if (tp->sendevents.keyboard)
++		libinput_device_remove_event_listener(
++					&tp->sendevents.keyboard_listener);
+ }
+ 
+ static void
+@@ -881,13 +897,59 @@ tp_trackpoint_event(uint64_t time, struct libinput_event *event, void *data)
+ }
+ 
+ static void
++tp_keyboard_timeout(uint64_t now, void *data)
++{
++	struct tp_dispatch *tp = data;
++
++	tp_tap_resume(tp, now);
++	tp->sendevents.keyboard_active = false;
++}
++
++static void
++tp_keyboard_event(uint64_t time, struct libinput_event *event, void *data)
++{
++	struct tp_dispatch *tp = data;
++	struct libinput_event_keyboard *kbdev;
++
++	if (event->type != LIBINPUT_EVENT_KEYBOARD_KEY)
++		return;
++
++	kbdev = libinput_event_get_keyboard_event(event);
++	/* modifier keys don't trigger disable-while-typing so things like
++	 * ctrl+zoom or ctrl+click are possible */
++	switch (libinput_event_keyboard_get_key(kbdev)) {
++		case KEY_LEFTCTRL:
++		case KEY_RIGHTCTRL:
++		case KEY_LEFTALT:
++		case KEY_RIGHTALT:
++		case KEY_LEFTSHIFT:
++		case KEY_RIGHTSHIFT:
++		case KEY_FN:
++			return;
++	default:
++		break;
++	}
++
++	if (!tp->sendevents.keyboard_active) {
++		tp_edge_scroll_stop_events(tp, time);
++		tp_gesture_stop(tp, time);
++		tp_tap_suspend(tp, time);
++		tp->sendevents.keyboard_active = true;
++	}
++
++	libinput_timer_set(&tp->sendevents.keyboard_timer,
++			   time + DEFAULT_KEYBOARD_ACTIVITY_TIMEOUT);
++}
++
++static void
+ tp_device_added(struct evdev_device *device,
+ 		struct evdev_device *added_device)
+ {
+ 	struct tp_dispatch *tp = (struct tp_dispatch*)device->dispatch;
+ 	unsigned int bus_tp = libevdev_get_id_bustype(device->evdev),
+-		     bus_trp = libevdev_get_id_bustype(added_device->evdev);
+-	bool tp_is_internal, trp_is_internal;
++		     bus_trp = libevdev_get_id_bustype(added_device->evdev),
++		     bus_kbd = libevdev_get_id_bustype(added_device->evdev);
++	bool tp_is_internal, trp_is_internal, kbd_is_internal;
+ 
+ 	tp_is_internal = bus_tp != BUS_USB && bus_tp != BUS_BLUETOOTH;
+ 	trp_is_internal = bus_trp != BUS_USB && bus_trp != BUS_BLUETOOTH;
+@@ -903,6 +965,18 @@ tp_device_added(struct evdev_device *device,
+ 					tp_trackpoint_event, tp);
+ 	}
+ 
++	/* FIXME: detect external keyboard better */
++	kbd_is_internal = bus_tp != BUS_BLUETOOTH &&
++			  bus_kbd == bus_tp;
++	if (tp_is_internal && kbd_is_internal &&
++	    tp->sendevents.keyboard == NULL) {
++		libinput_device_add_event_listener(&added_device->base,
++					&tp->sendevents.keyboard_listener,
++					tp_keyboard_event, tp);
++		tp->sendevents.keyboard = added_device;
++		tp->sendevents.keyboard_active = false;
++	}
++
+ 	if (tp->sendevents.current_mode !=
+ 	    LIBINPUT_CONFIG_SEND_EVENTS_DISABLED_ON_EXTERNAL_MOUSE)
+ 		return;
+@@ -929,6 +1003,12 @@ tp_device_removed(struct evdev_device *device,
+ 		tp->buttons.trackpoint = NULL;
+ 	}
+ 
++	if (removed_device == tp->sendevents.keyboard) {
++		libinput_device_remove_event_listener(
++					&tp->sendevents.keyboard_listener);
++		tp->sendevents.keyboard = NULL;
++	}
++
+ 	if (tp->sendevents.current_mode !=
+ 	    LIBINPUT_CONFIG_SEND_EVENTS_DISABLED_ON_EXTERNAL_MOUSE)
+ 		return;
+@@ -1204,6 +1284,10 @@ tp_init_sendevents(struct tp_dispatch *tp,
+ 	libinput_timer_init(&tp->sendevents.trackpoint_timer,
+ 			    tp->device->base.seat->libinput,
+ 			    tp_trackpoint_timeout, tp);
++
++	libinput_timer_init(&tp->sendevents.keyboard_timer,
++			    tp->device->base.seat->libinput,
++			    tp_keyboard_timeout, tp);
+ 	return 0;
+ }
+ 
+diff --git a/src/evdev-mt-touchpad.h b/src/evdev-mt-touchpad.h
+index ba65e41..3d51a39 100644
+--- a/src/evdev-mt-touchpad.h
++++ b/src/evdev-mt-touchpad.h
+@@ -64,6 +64,7 @@ enum touch_state {
+ enum touch_palm_state {
+ 	PALM_NONE = 0,
+ 	PALM_EDGE,
++	PALM_TYPING,
+ };
+ 
+ enum button_event {
+@@ -277,9 +278,15 @@ struct tp_dispatch {
+ 	struct {
+ 		struct libinput_device_config_send_events config;
+ 		enum libinput_config_send_events_mode current_mode;
++
+ 		bool trackpoint_active;
+ 		struct libinput_event_listener trackpoint_listener;
+ 		struct libinput_timer trackpoint_timer;
++
++		bool keyboard_active;
++		struct libinput_event_listener keyboard_listener;
++		struct libinput_timer keyboard_timer;
++		struct evdev_device *keyboard;
+ 	} sendevents;
+ };
+ 
+-- 
+2.3.5
+

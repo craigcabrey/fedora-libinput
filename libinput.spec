@@ -5,7 +5,7 @@
 
 Name:           libinput
 Version:        0.15.0
-Release:        1%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Release:        2%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 License:        MIT
@@ -17,6 +17,10 @@ Source2:        commitid
 %else
 Source0:        http://www.freedesktop.org/software/libinput/libinput-%{version}.tar.xz
 %endif
+
+Patch01:        0001-touchpad-switch-from-is_palm-to-an-enum.patch
+Patch02:        0002-touchpad-add-timeout-based-disable-while-typing.patch
+Patch03:        0003-touchpad-use-a-two-stage-timeout-for-disable-while-t.patch
 
 BuildRequires:  git
 BuildRequires:  autoconf automake libtool pkgconfig
@@ -93,6 +97,9 @@ find $RPM_BUILD_ROOT -name '*.la' -delete
 
 
 %changelog
+* Mon May 18 2015 Peter Hutterer <peter.hutterer@redhat.com> 0.15.0-2
+- Add disable-while-typing feature (#1209753)
+
 * Tue May 05 2015 Peter Hutterer <peter.hutterer@redhat.com> 0.15.0-1
 - libinput 0.15.0
 
