@@ -1,0 +1,31 @@
+From 46bb2e4d7583fe7d6b07a3f9fd2270d1e54e2129 Mon Sep 17 00:00:00 2001
+From: Peter Hutterer <peter.hutterer@who-t.net>
+Date: Mon, 25 May 2015 11:36:34 +1000
+Subject: [PATCH libinput 08/10] touchpad: reset the touch state when edge
+ scrolling is stopped
+
+Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+Reviewed-by: Hans de Goede <hdegoede@redhat.com>
+Tested-by: Benjamin Tissoires <benjamin.tissoires@gmail.com>
+---
+ src/evdev-mt-touchpad-edge-scroll.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/src/evdev-mt-touchpad-edge-scroll.c b/src/evdev-mt-touchpad-edge-scroll.c
+index 9bf3f0c..f7eae9e 100644
+--- a/src/evdev-mt-touchpad-edge-scroll.c
++++ b/src/evdev-mt-touchpad-edge-scroll.c
+@@ -438,6 +438,10 @@ tp_edge_scroll_stop_events(struct tp_dispatch *tp, uint64_t time)
+ 					    &zero,
+ 					    &zero_discrete);
+ 			t->scroll.direction = -1;
++			/* reset touch to area state, avoids loading the
++			 * state machine with special case handling */
++			t->scroll.edge = EDGE_NONE;
++			t->scroll.edge_state = EDGE_SCROLL_TOUCH_STATE_AREA;
+ 		}
+ 	}
+ }
+-- 
+2.4.1
+

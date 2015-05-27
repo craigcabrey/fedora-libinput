@@ -1,0 +1,59 @@
+From c98229492ce59faf402f446da200658454ace9d5 Mon Sep 17 00:00:00 2001
+From: Peter Hutterer <peter.hutterer@who-t.net>
+Date: Thu, 21 May 2015 13:30:24 +1000
+Subject: [PATCH libinput 06/10] touchpad: split disable-while-typing handling
+ into a helper function
+
+Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+Reviewed-by: Hans de Goede <hdegoede@redhat.com>
+Tested-by: Benjamin Tissoires <benjamin.tissoires@gmail.com>
+---
+ src/evdev-mt-touchpad.c | 25 ++++++++++++++++++-------
+ 1 file changed, 18 insertions(+), 7 deletions(-)
+
+diff --git a/src/evdev-mt-touchpad.c b/src/evdev-mt-touchpad.c
+index 3a0985d..ad20fb9 100644
+--- a/src/evdev-mt-touchpad.c
++++ b/src/evdev-mt-touchpad.c
+@@ -478,6 +478,22 @@ tp_palm_tap_is_palm(struct tp_dispatch *tp, struct tp_touch *t)
+ 	return false;
+ }
+ 
++static int
++tp_palm_detect_dwt(struct tp_dispatch *tp, struct tp_touch *t, uint64_t time)
++{
++	if (!tp->dwt.keyboard_active)
++		return 0;
++
++	if (t->state == TOUCH_BEGIN) {
++		t->palm.state = PALM_TYPING;
++		t->palm.time = time;
++		t->palm.first = t->point;
++		return 1;
++	}
++
++	return 0;
++}
++
+ static void
+ tp_palm_detect(struct tp_dispatch *tp, struct tp_touch *t, uint64_t time)
+ {
+@@ -486,13 +502,8 @@ tp_palm_detect(struct tp_dispatch *tp, struct tp_touch *t, uint64_t time)
+ 	struct device_float_coords delta;
+ 	int dirs;
+ 
+-	if (tp->dwt.keyboard_active &&
+-	    t->state == TOUCH_BEGIN) {
+-		t->palm.state = PALM_TYPING;
+-		t->palm.time = time;
+-		t->palm.first = t->point;
+-		return;
+-	}
++	if (tp_palm_detect_dwt(tp, t, time))
++	    return;
+ 
+ 	/* If labelled a touch as palm, we unlabel as palm when
+ 	   we move out of the palm edge zone within the timeout, provided
+-- 
+2.4.1
+

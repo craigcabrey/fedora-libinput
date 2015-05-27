@@ -1,0 +1,64 @@
+From 322d7f2302c61def6deb6c7cc7a406b4f85b880d Mon Sep 17 00:00:00 2001
+From: Peter Hutterer <peter.hutterer@who-t.net>
+Date: Mon, 25 May 2015 16:02:56 +1000
+Subject: [PATCH libinput 09/10] touchpad: don't enable edge palm detection on
+ Wacom touchpads
+
+Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+Reviewed-by: Hans de Goede <hdegoede@redhat.com>
+Tested-by: Benjamin Tissoires <benjamin.tissoires@gmail.com>
+---
+ src/evdev-mt-touchpad.c | 10 ++++++++--
+ test/touchpad.c         |  6 +++++-
+ 2 files changed, 13 insertions(+), 3 deletions(-)
+
+diff --git a/src/evdev-mt-touchpad.c b/src/evdev-mt-touchpad.c
+index 56a70cc..9a04893 100644
+--- a/src/evdev-mt-touchpad.c
++++ b/src/evdev-mt-touchpad.c
+@@ -1299,6 +1299,7 @@ tp_init_palmdetect(struct tp_dispatch *tp,
+ 		   struct evdev_device *device)
+ {
+ 	int width, height;
++	unsigned int vendor_id;
+ 
+ 	tp->palm.right_edge = INT_MAX;
+ 	tp->palm.left_edge = INT_MIN;
+@@ -1309,8 +1310,13 @@ tp_init_palmdetect(struct tp_dispatch *tp,
+ 	height = abs(device->abs.absinfo_y->maximum -
+ 		    device->abs.absinfo_y->minimum);
+ 
+-	/* Apple touchpads are always big enough to warrant palm detection */
+-	if (evdev_device_get_id_vendor(device) != VENDOR_ID_APPLE) {
++	vendor_id = evdev_device_get_id_vendor(device);
++
++	/* Wacom doesn't have internal touchpads,
++	 * Apple touchpads are always big enough to warrant palm detection */
++	if (vendor_id == VENDOR_ID_WACOM) {
++		return 0;
++	} else if (vendor_id != VENDOR_ID_APPLE) {
+ 		/* We don't know how big the touchpad is */
+ 		if (device->abs.absinfo_x->resolution == 1)
+ 			return 0;
+diff --git a/test/touchpad.c b/test/touchpad.c
+index 2624dda..e33d0e1 100644
+--- a/test/touchpad.c
++++ b/test/touchpad.c
+@@ -2949,9 +2949,13 @@ static int
+ touchpad_has_palm_detect_size(struct litest_device *dev)
+ {
+ 	double width, height;
++	unsigned int vendor;
+ 	int rc;
+ 
+-	if (libinput_device_get_id_vendor(dev->libinput_device) == ID_VENDOR_APPLE)
++	vendor = libinput_device_get_id_vendor(dev->libinput_device);
++	if (vendor == VENDOR_ID_WACOM)
++		return 0;
++	if (vendor == VENDOR_ID_APPLE)
+ 		return 1;
+ 
+ 	rc = libinput_device_get_size(dev->libinput_device, &width, &height);
+-- 
+2.4.1
+

@@ -1,0 +1,84 @@
+From 640c17cb8102a1833e0366eaf3f7bd5325147741 Mon Sep 17 00:00:00 2001
+From: Peter Hutterer <peter.hutterer@who-t.net>
+Date: Mon, 25 May 2015 08:48:25 +1000
+Subject: [PATCH libinput 02/10] touchpad: extend the key blacklist for
+ disable-while-typing
+
+Alt-tab should not trigger the disable-while-typing timeout, likewise with the
+F-keys, multimedia keys, the windows and menu key, etc.
+
+https://bugs.freedesktop.org/show_bug.cgi?id=90613
+
+Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+Reviewed-by: Hans de Goede <hdegoede@redhat.com>
+Tested-by: Benjamin Tissoires <benjamin.tissoires@gmail.com>
+---
+ src/evdev-mt-touchpad.c | 45 +++++++++++++++++++++++++++++++++------------
+ 1 file changed, 33 insertions(+), 12 deletions(-)
+
+diff --git a/src/evdev-mt-touchpad.c b/src/evdev-mt-touchpad.c
+index 89d24f3..26edcb4 100644
+--- a/src/evdev-mt-touchpad.c
++++ b/src/evdev-mt-touchpad.c
+@@ -871,6 +871,37 @@ tp_keyboard_timeout(uint64_t now, void *data)
+ 	tp->dwt.keyboard_active = false;
+ }
+ 
++static inline bool
++tp_key_ignore_for_dwt(unsigned int keycode)
++{
++	switch (keycode) {
++	/* Ignore modifiers to be responsive to ctrl-click, alt-tab, etc. */
++	case KEY_LEFTCTRL:
++	case KEY_RIGHTCTRL:
++	case KEY_LEFTALT:
++	case KEY_RIGHTALT:
++	case KEY_LEFTSHIFT:
++	case KEY_RIGHTSHIFT:
++	case KEY_FN:
++	case KEY_CAPSLOCK:
++	case KEY_TAB:
++	case KEY_COMPOSE:
++	case KEY_RIGHTMETA:
++	case KEY_LEFTMETA:
++		return true;
++	default:
++		break;
++	}
++
++	/* Ignore keys not part of the "typewriter set", i.e. F-keys,
++	 * multimedia keys, numpad, etc.
++	 */
++	if (keycode >= KEY_F1)
++		return true;
++
++	return false;
++}
++
+ static void
+ tp_keyboard_event(uint64_t time, struct libinput_event *event, void *data)
+ {
+@@ -890,18 +921,8 @@ tp_keyboard_event(uint64_t time, struct libinput_event *event, void *data)
+ 
+ 	/* modifier keys don't trigger disable-while-typing so things like
+ 	 * ctrl+zoom or ctrl+click are possible */
+-	switch (libinput_event_keyboard_get_key(kbdev)) {
+-		case KEY_LEFTCTRL:
+-		case KEY_RIGHTCTRL:
+-		case KEY_LEFTALT:
+-		case KEY_RIGHTALT:
+-		case KEY_LEFTSHIFT:
+-		case KEY_RIGHTSHIFT:
+-		case KEY_FN:
+-			return;
+-	default:
+-		break;
+-	}
++	if (tp_key_ignore_for_dwt(libinput_event_keyboard_get_key(kbdev)))
++		return;
+ 
+ 	if (!tp->dwt.keyboard_active) {
+ 		tp_edge_scroll_stop_events(tp, time);
+-- 
+2.4.1
+

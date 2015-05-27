@@ -5,7 +5,7 @@
 
 Name:           libinput
 Version:        0.15.0
-Release:        2%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Release:        3%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 License:        MIT
@@ -21,6 +21,17 @@ Source0:        http://www.freedesktop.org/software/libinput/libinput-%{version}
 Patch01:        0001-touchpad-switch-from-is_palm-to-an-enum.patch
 Patch02:        0002-touchpad-add-timeout-based-disable-while-typing.patch
 Patch03:        0003-touchpad-use-a-two-stage-timeout-for-disable-while-t.patch
+
+Patch04:        0001-touchpad-move-disable-while-typing-into-its-own-stru.patch
+Patch05:        0002-touchpad-extend-the-key-blacklist-for-disable-while-.patch
+Patch06:        0003-touchpad-add-helper-function-to-get-from-tp-to-the-l.patch
+Patch07:        0004-touchpad-only-check-keyboards-for-disable-while-typi.patch
+Patch08:        0005-touchpad-be-finer-grained-about-when-to-pair-touchpa.patch
+Patch09:        0006-touchpad-split-disable-while-typing-handling-into-a-.patch
+Patch10:        0007-touchpad-add-palm-state-debugging.patch
+Patch11:        0008-touchpad-reset-the-touch-state-when-edge-scrolling-i.patch
+Patch12:        0009-touchpad-don-t-enable-edge-palm-detection-on-Wacom-t.patch
+Patch13:        0010-touchpad-touches-after-the-last-key-press-can-be-rel.patch
 
 BuildRequires:  git
 BuildRequires:  autoconf automake libtool pkgconfig
@@ -97,6 +108,9 @@ find $RPM_BUILD_ROOT -name '*.la' -delete
 
 
 %changelog
+* Wed May 27 2015 Peter Hutterer <peter.hutterer@redhat.com> 0.15.0-3
+- Refine disable-while-typing (#1209753)
+
 * Mon May 18 2015 Peter Hutterer <peter.hutterer@redhat.com> 0.15.0-2
 - Add disable-while-typing feature (#1209753)
 
