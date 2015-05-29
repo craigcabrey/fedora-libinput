@@ -5,7 +5,7 @@
 
 Name:           libinput
 Version:        0.15.0
-Release:        3%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Release:        4%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 License:        MIT
@@ -32,6 +32,9 @@ Patch10:        0007-touchpad-add-palm-state-debugging.patch
 Patch11:        0008-touchpad-reset-the-touch-state-when-edge-scrolling-i.patch
 Patch12:        0009-touchpad-don-t-enable-edge-palm-detection-on-Wacom-t.patch
 Patch13:        0010-touchpad-touches-after-the-last-key-press-can-be-rel.patch
+
+# Bug 1225998 - Tap-and-drag touchpad behavior not configurable
+Patch14:        0001-touchpad-end-tap-and-drag-with-an-extra-tap.patch
 
 BuildRequires:  git
 BuildRequires:  autoconf automake libtool pkgconfig
@@ -108,6 +111,9 @@ find $RPM_BUILD_ROOT -name '*.la' -delete
 
 
 %changelog
+* Fri May 29 2015 Peter Hutterer <peter.hutterer@redhat.com> 0.15.0-4
+- Add tap-to-end-drag patch (#1225998)
+ 
 * Wed May 27 2015 Peter Hutterer <peter.hutterer@redhat.com> 0.15.0-3
 - Refine disable-while-typing (#1209753)
 
