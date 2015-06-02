@@ -5,7 +5,7 @@
 
 Name:           libinput
 Version:        0.16.0
-Release:        3%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Release:        4%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 License:        MIT
@@ -24,6 +24,9 @@ Patch03:        0003-filter-enforce-minimum-velocity.patch
 
 #Bug 1225998 - Tap-and-drag touchpad behavior not configurable
 Patch04:        0001-touchpad-reduce-tap-n-drag-timeout-to-300ms.patch
+
+# Bug 1227182 - Middle click pastes on button press instead of release
+Patch05:        0001-evdev-always-default-to-the-middle-button-for-button.patch
 
 BuildRequires:  git
 BuildRequires:  autoconf automake libtool pkgconfig
@@ -100,6 +103,10 @@ find $RPM_BUILD_ROOT -name '*.la' -delete
 
 
 %changelog
+* Tue Jun 02 2015 Peter Hutterer <peter.hutterer@redhat.com> 0.16.0-4
+- Always set the middle button as default button for button-scrolling
+  (#1227182)
+
 * Tue Jun 02 2015 Peter Hutterer <peter.hutterer@redhat.com> 0.16.0-3
 - Reduce tap-n-drag timeout (#1225998)
 
