@@ -5,7 +5,7 @@
 
 Name:           libinput
 Version:        0.16.0
-Release:        2%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Release:        3%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 License:        MIT
@@ -21,6 +21,9 @@ Source0:        http://www.freedesktop.org/software/libinput/libinput-%{version}
 Patch01:        0001-filter-pass-last_velocity-as-argument.patch
 Patch02:        0002-filter-up-the-motion-timeout-to-1-second.patch
 Patch03:        0003-filter-enforce-minimum-velocity.patch
+
+#Bug 1225998 - Tap-and-drag touchpad behavior not configurable
+Patch04:        0001-touchpad-reduce-tap-n-drag-timeout-to-300ms.patch
 
 BuildRequires:  git
 BuildRequires:  autoconf automake libtool pkgconfig
@@ -97,6 +100,9 @@ find $RPM_BUILD_ROOT -name '*.la' -delete
 
 
 %changelog
+* Tue Jun 02 2015 Peter Hutterer <peter.hutterer@redhat.com> 0.16.0-3
+- Reduce tap-n-drag timeout (#1225998)
+
 * Tue Jun 02 2015 Peter Hutterer <peter.hutterer@redhat.com> 0.16.0-2
 - Handle slow motions better (#1227039)
 
