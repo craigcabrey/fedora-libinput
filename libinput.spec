@@ -5,7 +5,7 @@
 
 Name:           libinput
 Version:        0.16.0
-Release:        1%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Release:        2%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 License:        MIT
@@ -17,6 +17,10 @@ Source2:        commitid
 %else
 Source0:        http://www.freedesktop.org/software/libinput/libinput-%{version}.tar.xz
 %endif
+
+Patch01:        0001-filter-pass-last_velocity-as-argument.patch
+Patch02:        0002-filter-up-the-motion-timeout-to-1-second.patch
+Patch03:        0003-filter-enforce-minimum-velocity.patch
 
 BuildRequires:  git
 BuildRequires:  autoconf automake libtool pkgconfig
@@ -93,6 +97,9 @@ find $RPM_BUILD_ROOT -name '*.la' -delete
 
 
 %changelog
+* Tue Jun 02 2015 Peter Hutterer <peter.hutterer@redhat.com> 0.16.0-2
+- Handle slow motions better (#1227039)
+
 * Tue Jun 02 2015 Peter Hutterer <peter.hutterer@redhat.com> 0.16.0-1
 - libinput 0.16.0
 
