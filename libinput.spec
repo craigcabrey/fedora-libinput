@@ -5,7 +5,7 @@
 
 Name:           libinput
 Version:        0.17.0
-Release:        1%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Release:        2%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 License:        MIT
@@ -17,6 +17,8 @@ Source2:        commitid
 %else
 Source0:        http://www.freedesktop.org/software/libinput/libinput-%{version}.tar.xz
 %endif
+
+Patch01:        0001-filter-require-minimum-acceleration-factor-of-0.3.patch
 
 BuildRequires:  git
 BuildRequires:  autoconf automake libtool pkgconfig
@@ -93,6 +95,9 @@ find $RPM_BUILD_ROOT -name '*.la' -delete
 
 
 %changelog
+* Tue Jun 09 2015 Peter Hutterer <peter.hutterer@redhat.com> 0.17.0-2
+- Cap the minimum acceleration slowdown at 0.3 (#1227796)
+
 * Thu Jun 04 2015 Peter Hutterer <peter.hutterer@redhat.com> 0.17.0-1
 - libinput 0.17
 
