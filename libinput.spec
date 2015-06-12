@@ -5,7 +5,7 @@
 
 Name:           libinput
 Version:        0.17.0
-Release:        2%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Release:        3%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 License:        MIT
@@ -25,6 +25,7 @@ BuildRequires:  autoconf automake libtool pkgconfig
 BuildRequires:  libevdev-devel
 BuildRequires:  libudev-devel
 BuildRequires:  mtdev-devel
+BuildRequires:  pkgconfig(udev)
 
 %description
 libinput is a library that handles input devices for display servers and other
@@ -95,6 +96,9 @@ find $RPM_BUILD_ROOT -name '*.la' -delete
 
 
 %changelog
+* Fri Jun 12 2015 Peter Hutterer <peter.hutterer@redhat.com> 0.17.0-3
+- Require udev.pc for the build
+
 * Tue Jun 09 2015 Peter Hutterer <peter.hutterer@redhat.com> 0.17.0-2
 - Cap the minimum acceleration slowdown at 0.3 (#1227796)
 
