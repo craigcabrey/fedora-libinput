@@ -1,0 +1,101 @@
+From cd701f2d75a48e3bfc1e28cb087d7ddb607f60ba Mon Sep 17 00:00:00 2001
+From: Peter Hutterer <peter.hutterer@who-t.net>
+Date: Tue, 16 Jun 2015 15:39:48 +1000
+Subject: [PATCH libinput] touchpad: disable right-edge palm detection for edge
+ scrolling
+
+Most scroll motions would be labelled a palm.
+
+https://bugs.freedesktop.org/show_bug.cgi?id=90980
+
+Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+---
+ src/evdev-mt-touchpad-edge-scroll.c |  2 +-
+ src/evdev-mt-touchpad.c             |  3 +++
+ src/evdev-mt-touchpad.h             |  3 +++
+ test/touchpad.c                     | 21 +++++++++++++++++++++
+ 4 files changed, 28 insertions(+), 1 deletion(-)
+
+diff --git a/src/evdev-mt-touchpad-edge-scroll.c b/src/evdev-mt-touchpad-edge-scroll.c
+index f5cfa9d..56f1e8a 100644
+--- a/src/evdev-mt-touchpad-edge-scroll.c
++++ b/src/evdev-mt-touchpad-edge-scroll.c
+@@ -75,7 +75,7 @@ edge_event_to_str(enum scroll_event event)
+ 	return NULL;
+ }
+ 
+-static uint32_t
++uint32_t
+ tp_touch_get_edge(struct tp_dispatch *tp, struct tp_touch *t)
+ {
+ 	uint32_t edge = EDGE_NONE;
+diff --git a/src/evdev-mt-touchpad.c b/src/evdev-mt-touchpad.c
+index 293760d..356f9b9 100644
+--- a/src/evdev-mt-touchpad.c
++++ b/src/evdev-mt-touchpad.c
+@@ -558,6 +558,9 @@ tp_palm_detect(struct tp_dispatch *tp, struct tp_touch *t, uint64_t time)
+ 	    tp_button_is_inside_softbutton_area(tp, t))
+ 		return;
+ 
++	if (tp_touch_get_edge(tp, t) & EDGE_RIGHT)
++		return;
++
+ 	t->palm.state = PALM_EDGE;
+ 	t->palm.time = time;
+ 	t->palm.first = t->point;
+diff --git a/src/evdev-mt-touchpad.h b/src/evdev-mt-touchpad.h
+index 04610af..9357969 100644
+--- a/src/evdev-mt-touchpad.h
++++ b/src/evdev-mt-touchpad.h
+@@ -399,6 +399,9 @@ tp_edge_scroll_stop_events(struct tp_dispatch *tp, uint64_t time);
+ int
+ tp_edge_scroll_touch_active(struct tp_dispatch *tp, struct tp_touch *t);
+ 
++uint32_t
++tp_touch_get_edge(struct tp_dispatch *tp, struct tp_touch *t);
++
+ int
+ tp_init_gesture(struct tp_dispatch *tp);
+ 
+diff --git a/test/touchpad.c b/test/touchpad.c
+index 8e68597..d6e3cf2 100644
+--- a/test/touchpad.c
++++ b/test/touchpad.c
+@@ -3330,6 +3330,26 @@ START_TEST(touchpad_palm_detect_at_edge)
+ }
+ END_TEST
+ 
++START_TEST(touchpad_no_palm_detect_at_edge_for_edge_scrolling)
++{
++	struct litest_device *dev = litest_current_device();
++	struct libinput *li = dev->libinput;
++
++	if (!touchpad_has_palm_detect_size(dev))
++		return;
++
++	enable_edge_scroll(dev);
++
++	litest_drain_events(li);
++
++	litest_touch_down(dev, 0, 99, 50);
++	litest_touch_move_to(dev, 0, 99, 50, 99, 70, 5, 0);
++	litest_touch_up(dev, 0);
++
++	litest_assert_only_typed_events(li, LIBINPUT_EVENT_POINTER_AXIS);
++}
++END_TEST
++
+ START_TEST(touchpad_palm_detect_at_bottom_corners)
+ {
+ 	struct litest_device *dev = litest_current_device();
+@@ -5232,6 +5252,7 @@ litest_setup_tests(void)
+ 	litest_add("touchpad:palm", touchpad_palm_detect_palm_stays_palm, LITEST_TOUCHPAD, LITEST_ANY);
+ 	litest_add("touchpad:palm", touchpad_palm_detect_no_palm_moving_into_edges, LITEST_TOUCHPAD, LITEST_ANY);
+ 	litest_add("touchpad:palm", touchpad_palm_detect_tap, LITEST_TOUCHPAD, LITEST_ANY);
++	litest_add("touchpad:palm", touchpad_no_palm_detect_at_edge_for_edge_scrolling, LITEST_TOUCHPAD, LITEST_CLICKPAD);
+ 
+ 	litest_add("touchpad:left-handed", touchpad_left_handed, LITEST_TOUCHPAD|LITEST_BUTTON, LITEST_CLICKPAD);
+ 	litest_add("touchpad:left-handed", touchpad_left_handed_clickpad, LITEST_CLICKPAD, LITEST_APPLE_CLICKPAD);
+-- 
+2.4.3
+

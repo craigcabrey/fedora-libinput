@@ -5,7 +5,7 @@
 
 Name:           libinput
 Version:        0.17.0
-Release:        4%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Release:        5%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 License:        MIT
@@ -21,6 +21,8 @@ Source0:        http://www.freedesktop.org/software/libinput/libinput-%{version}
 Patch01:        0001-filter-require-minimum-acceleration-factor-of-0.3.patch
 Patch02:        0001-touchpad-fix-pinned-finger-drifting.patch
 Patch03:        0001-touchpad-set-the-finger-pin-distance-to-5mm-where-po.patch
+Patch04:        0001-touchpad-disable-right-edge-palm-detection-for-edge-.patch
+Patch05:        0001-touchpad-make-the-hysteresis-dependent-on-physical-d.patch
 
 BuildRequires:  git
 BuildRequires:  autoconf automake libtool pkgconfig
@@ -98,6 +100,11 @@ find $RPM_BUILD_ROOT -name '*.la' -delete
 
 
 %changelog
+* Tue Jun 16 2015 Peter Hutterer <peter.hutterer@redhat.com> 0.17.0-5
+- Use physical values for the hystersis where possible (#1230462)
+- Disable right-edge palm detection when edge scrolling is active
+  (fdo#90980)
+
 * Tue Jun 16 2015 Peter Hutterer <peter.hutterer@redhat.com> 0.17.0-4
 - Avoid erroneous finger movement after a physical click (#1230441)
 
