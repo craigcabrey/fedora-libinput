@@ -5,7 +5,7 @@
 
 Name:           libinput
 Version:        0.17.0
-Release:        3%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Release:        4%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 License:        MIT
@@ -19,6 +19,8 @@ Source0:        http://www.freedesktop.org/software/libinput/libinput-%{version}
 %endif
 
 Patch01:        0001-filter-require-minimum-acceleration-factor-of-0.3.patch
+Patch02:        0001-touchpad-fix-pinned-finger-drifting.patch
+Patch03:        0001-touchpad-set-the-finger-pin-distance-to-5mm-where-po.patch
 
 BuildRequires:  git
 BuildRequires:  autoconf automake libtool pkgconfig
@@ -96,6 +98,9 @@ find $RPM_BUILD_ROOT -name '*.la' -delete
 
 
 %changelog
+* Tue Jun 16 2015 Peter Hutterer <peter.hutterer@redhat.com> 0.17.0-4
+- Avoid erroneous finger movement after a physical click (#1230441)
+
 * Fri Jun 12 2015 Peter Hutterer <peter.hutterer@redhat.com> 0.17.0-3
 - Require udev.pc for the build
 

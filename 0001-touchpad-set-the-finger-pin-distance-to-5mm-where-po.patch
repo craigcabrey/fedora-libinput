@@ -1,0 +1,194 @@
+From 8025b374d564f4a30b089e5cf6fd65e0c6af8da2 Mon Sep 17 00:00:00 2001
+From: Peter Hutterer <peter.hutterer@who-t.net>
+Date: Fri, 12 Jun 2015 17:29:41 +1000
+Subject: [PATCH libinput] touchpad: set the finger pin distance to 5mm where
+ possible
+
+On touchpads with resolutions, use a 5mm motion threshold before we unpin the
+finger (allow motion events while a clickpad button is down). This should
+remove any erroneous finger movements while clicking, at the cost of having to
+move the finger a bit more for a single-finger click-and-drag (use two fingers
+already!)
+
+And drop the finger drifting, it was per-event based rather than time-based.
+So unless the motion threshold was hit in a single event it was possible to
+move the finger around the whole touchpad without ever unpinning it.
+
+Drop the finger drifting altogether, if the touchpad drifts by more than 5mm
+we have other issues.
+
+https://bugzilla.redhat.com/show_bug.cgi?id=1230462
+
+Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+Reviewed-by: Hans de Goede <hdegoede@redhat.com>
+---
+ src/evdev-mt-touchpad-buttons.c | 19 ++++++++++------
+ src/evdev-mt-touchpad.c         | 10 ++++-----
+ src/evdev-mt-touchpad.h         |  5 ++++-
+ src/libinput-util.h             |  6 ++++++
+ test/touchpad.c                 | 48 +++++++++++++++++++++++++++++++++++++++++
+ 5 files changed, 75 insertions(+), 13 deletions(-)
+
+diff --git a/src/evdev-mt-touchpad-buttons.c b/src/evdev-mt-touchpad-buttons.c
+index 5786ea8..eb0ddcb 100644
+--- a/src/evdev-mt-touchpad-buttons.c
++++ b/src/evdev-mt-touchpad-buttons.c
+@@ -31,7 +31,6 @@
+ 
+ #include "evdev-mt-touchpad.h"
+ 
+-#define DEFAULT_BUTTON_MOTION_THRESHOLD 0.02 /* 2% of size */
+ #define DEFAULT_BUTTON_ENTER_TIMEOUT 100 /* ms */
+ #define DEFAULT_BUTTON_LEAVE_TIMEOUT 300 /* ms */
+ 
+@@ -709,11 +708,19 @@ tp_init_buttons(struct tp_dispatch *tp,
+ 	absinfo_x = device->abs.absinfo_x;
+ 	absinfo_y = device->abs.absinfo_y;
+ 
+-	width = abs(absinfo_x->maximum - absinfo_x->minimum);
+-	height = abs(absinfo_y->maximum - absinfo_y->minimum);
+-	diagonal = sqrt(width*width + height*height);
+-
+-	tp->buttons.motion_dist = diagonal * DEFAULT_BUTTON_MOTION_THRESHOLD;
++	/* pinned-finger motion threshold, see tp_unpin_finger.
++	   The MAGIC for resolution-less touchpads ends up as 2% of the diagonal */
++	if (device->abs.fake_resolution) {
++		const int BUTTON_MOTION_MAGIC = 0.007;
++		width = abs(absinfo_x->maximum - absinfo_x->minimum);
++		height = abs(absinfo_y->maximum - absinfo_y->minimum);
++		diagonal = sqrt(width*width + height*height);
++		tp->buttons.motion_dist.x_scale_coeff = diagonal * BUTTON_MOTION_MAGIC;
++		tp->buttons.motion_dist.y_scale_coeff = diagonal * BUTTON_MOTION_MAGIC;
++	} else {
++		tp->buttons.motion_dist.x_scale_coeff = 1.0/absinfo_x->resolution;
++		tp->buttons.motion_dist.y_scale_coeff = 1.0/absinfo_y->resolution;
++	}
+ 
+ 	tp->buttons.config_method.get_methods = tp_button_config_click_get_methods;
+ 	tp->buttons.config_method.set_method = tp_button_config_click_set_method;
+diff --git a/src/evdev-mt-touchpad.c b/src/evdev-mt-touchpad.c
+index ce79530..6f11599 100644
+--- a/src/evdev-mt-touchpad.c
++++ b/src/evdev-mt-touchpad.c
+@@ -431,17 +431,15 @@ tp_unpin_finger(struct tp_dispatch *tp, struct tp_touch *t)
+ 		return;
+ 
+ 	xdist = abs(t->point.x - t->pinned.center.x);
++	xdist *= tp->buttons.motion_dist.x_scale_coeff;
+ 	ydist = abs(t->point.y - t->pinned.center.y);
++	ydist *= tp->buttons.motion_dist.y_scale_coeff;
+ 
+-	if (xdist * xdist + ydist * ydist >=
+-			tp->buttons.motion_dist * tp->buttons.motion_dist) {
++	/* 3mm movement -> unpin */
++	if (vector_length(xdist, ydist) >= 3.0) {
+ 		t->pinned.is_pinned = false;
+ 		return;
+ 	}
+-
+-	/* The finger may slowly drift, adjust the center */
+-	t->pinned.center.x = (t->point.x + t->pinned.center.x)/2;
+-	t->pinned.center.y = (t->point.y + t->pinned.center.y)/2;
+ }
+ 
+ static void
+diff --git a/src/evdev-mt-touchpad.h b/src/evdev-mt-touchpad.h
+index fef5cb3..bd2d163 100644
+--- a/src/evdev-mt-touchpad.h
++++ b/src/evdev-mt-touchpad.h
+@@ -223,7 +223,10 @@ struct tp_dispatch {
+ 		bool click_pending;
+ 		uint32_t state;
+ 		uint32_t old_state;
+-		uint32_t motion_dist;		/* for pinned touches */
++		struct {
++			double x_scale_coeff;
++			double y_scale_coeff;
++		} motion_dist;			/* for pinned touches */
+ 		unsigned int active;		/* currently active button, for release event */
+ 		bool active_is_topbutton;	/* is active a top button? */
+ 
+diff --git a/src/libinput-util.h b/src/libinput-util.h
+index 910406c..224e4b6 100644
+--- a/src/libinput-util.h
++++ b/src/libinput-util.h
+@@ -284,4 +284,10 @@ int parse_mouse_dpi_property(const char *prop);
+ int parse_mouse_wheel_click_angle_property(const char *prop);
+ double parse_trackpoint_accel_property(const char *prop);
+ 
++static inline double
++vector_length(double x, double y)
++{
++	return sqrt(x * x + y * y);
++}
++
+ #endif /* LIBINPUT_UTIL_H */
+diff --git a/test/touchpad.c b/test/touchpad.c
+index 692698c..1e5e97b 100644
+--- a/test/touchpad.c
++++ b/test/touchpad.c
+@@ -2153,6 +2153,53 @@ START_TEST(clickpad_click_n_drag)
+ }
+ END_TEST
+ 
++START_TEST(clickpad_finger_pin)
++{
++	struct litest_device *dev = litest_current_device();
++	struct libinput *li = dev->libinput;
++	struct libevdev *evdev = dev->evdev;
++	const struct input_absinfo *abs;
++
++	abs = libevdev_get_abs_info(evdev, ABS_MT_POSITION_X);
++	ck_assert_notnull(abs);
++	if (abs->resolution == 0)
++		return;
++
++	litest_drain_events(li);
++
++	/* make sure the movement generates pointer events when
++	   not pinned */
++	litest_touch_down(dev, 0, 50, 50);
++	litest_touch_move_to(dev, 0, 50, 50, 52, 52, 10, 1);
++	litest_touch_move_to(dev, 0, 52, 52, 48, 48, 10, 1);
++	litest_touch_move_to(dev, 0, 48, 48, 50, 50, 10, 1);
++	litest_assert_only_typed_events(li, LIBINPUT_EVENT_POINTER_MOTION);
++
++	litest_button_click(dev, BTN_LEFT, true);
++	litest_drain_events(li);
++
++	litest_touch_move_to(dev, 0, 50, 50, 52, 52, 10, 1);
++	litest_touch_move_to(dev, 0, 52, 52, 48, 48, 10, 1);
++	litest_touch_move_to(dev, 0, 48, 48, 50, 50, 10, 1);
++
++	litest_assert_empty_queue(li);
++
++	litest_button_click(dev, BTN_LEFT, false);
++	litest_assert_only_typed_events(li, LIBINPUT_EVENT_POINTER_BUTTON);
++
++	/* still pinned after release */
++	litest_touch_move_to(dev, 0, 50, 50, 52, 52, 10, 1);
++	litest_touch_move_to(dev, 0, 52, 52, 48, 48, 10, 1);
++	litest_touch_move_to(dev, 0, 48, 48, 50, 50, 10, 1);
++
++	litest_assert_empty_queue(li);
++
++	/* move to unpin */
++	litest_touch_move_to(dev, 0, 50, 50, 70, 70, 10, 1);
++	litest_assert_only_typed_events(li, LIBINPUT_EVENT_POINTER_MOTION);
++}
++END_TEST
++
+ START_TEST(clickpad_softbutton_left)
+ {
+ 	struct litest_device *dev = litest_current_device();
+@@ -5144,6 +5191,7 @@ litest_setup_tests(void)
+ 	litest_add("touchpad:click", touchpad_btn_left, LITEST_TOUCHPAD|LITEST_BUTTON, LITEST_CLICKPAD);
+ 	litest_add("touchpad:click", clickpad_btn_left, LITEST_CLICKPAD, LITEST_ANY);
+ 	litest_add("touchpad:click", clickpad_click_n_drag, LITEST_CLICKPAD, LITEST_SINGLE_TOUCH);
++	litest_add("touchpad:click", clickpad_finger_pin, LITEST_CLICKPAD, LITEST_ANY);
+ 
+ 	litest_add("touchpad:softbutton", clickpad_softbutton_left, LITEST_CLICKPAD, LITEST_APPLE_CLICKPAD);
+ 	litest_add("touchpad:softbutton", clickpad_softbutton_right, LITEST_CLICKPAD, LITEST_APPLE_CLICKPAD);
+-- 
+2.4.3
+
