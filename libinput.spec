@@ -5,7 +5,7 @@
 
 Name:           libinput
 Version:        0.18.0
-Release:        2%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Release:        3%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 License:        MIT
@@ -20,6 +20,7 @@ Source0:        http://www.freedesktop.org/software/libinput/libinput-%{version}
 
 Patch01: 0001-touchpad-only-send-most-recent-edge-delta-when-trigg.patch
 Patch02: 0001-touchpad-reduce-edge-scroll-motion-threshold-to-3mm.patch
+Patch03: 0001-touchpad-fix-stuck-finger-after-a-click.patch
 
 BuildRequires:  git
 BuildRequires:  autoconf automake libtool pkgconfig
@@ -97,6 +98,9 @@ find $RPM_BUILD_ROOT -name '*.la' -delete
 
 
 %changelog
+* Thu Jun 25 2015 Peter Hutterer <peter.hutterer@redhat.com> 0.18.0-3
+- Fix stuck finger after a clickpad click on resolutionless touchpads
+
 * Wed Jun 24 2015 Peter Hutterer <peter.hutterer@redhat.com> 0.18.0-2
 - Fix initial jump during edge scrolling
 

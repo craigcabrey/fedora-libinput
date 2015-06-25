@@ -1,0 +1,52 @@
+From 56264a6ff624afc39935a744d5fd40f0ae969a52 Mon Sep 17 00:00:00 2001
+From: Peter Hutterer <peter.hutterer@who-t.net>
+Date: Thu, 25 Jun 2015 12:20:04 +1000
+Subject: [PATCH libinput] touchpad: fix stuck finger after a click
+
+On a touchpad without resolution, the pinned finger was stuck. The motion
+distance scale factor ended up as 0 and the finger never reached the threshold
+of 3mm.
+int was not the best choice of datatype for a value of 0.007...
+
+Fix the data types for xdist/ydist at the same time, clamping to int may cause
+erroneous (un)pinning.
+
+Introduced in 8025b374d564f4a30b089e5cf6fd65e0c6af8da2
+
+https://bugs.freedesktop.org/show_bug.cgi?id=91070
+
+Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+---
+ src/evdev-mt-touchpad-buttons.c | 2 +-
+ src/evdev-mt-touchpad.c         | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/evdev-mt-touchpad-buttons.c b/src/evdev-mt-touchpad-buttons.c
+index 8d4e278..6abf9d5 100644
+--- a/src/evdev-mt-touchpad-buttons.c
++++ b/src/evdev-mt-touchpad-buttons.c
+@@ -741,7 +741,7 @@ tp_init_buttons(struct tp_dispatch *tp,
+ 	/* pinned-finger motion threshold, see tp_unpin_finger.
+ 	   The MAGIC for resolution-less touchpads ends up as 2% of the diagonal */
+ 	if (device->abs.fake_resolution) {
+-		const int BUTTON_MOTION_MAGIC = 0.007;
++		const double BUTTON_MOTION_MAGIC = 0.007;
+ 		width = abs(absinfo_x->maximum - absinfo_x->minimum);
+ 		height = abs(absinfo_y->maximum - absinfo_y->minimum);
+ 		diagonal = sqrt(width*width + height*height);
+diff --git a/src/evdev-mt-touchpad.c b/src/evdev-mt-touchpad.c
+index 9e60f46..4666870 100644
+--- a/src/evdev-mt-touchpad.c
++++ b/src/evdev-mt-touchpad.c
+@@ -426,7 +426,7 @@ tp_process_key(struct tp_dispatch *tp,
+ static void
+ tp_unpin_finger(struct tp_dispatch *tp, struct tp_touch *t)
+ {
+-	unsigned int xdist, ydist;
++	double xdist, ydist;
+ 
+ 	if (!t->pinned.is_pinned)
+ 		return;
+-- 
+2.4.3
+
