@@ -1,0 +1,37 @@
+From d1639c88ce2a710ab9b771766f473a72b66100db Mon Sep 17 00:00:00 2001
+From: Peter Hutterer <peter.hutterer@who-t.net>
+Date: Fri, 19 Jun 2015 16:01:34 +1000
+Subject: [PATCH libinput 2/9] evdev: read dpi before evdev_configure_device
+
+So we can use to set up accel during evdev_configure_device.
+
+Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+---
+ src/evdev.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/evdev.c b/src/evdev.c
+index 7e1e5c8..2644b76 100644
+--- a/src/evdev.c
++++ b/src/evdev.c
+@@ -2083,6 +2083,8 @@ evdev_device_create(struct libinput_seat *seat,
+ 	device->scroll.wheel_click_angle =
+ 		evdev_read_wheel_click_prop(device);
+ 	device->model = evdev_read_model(device);
++	device->dpi = evdev_read_dpi_prop(device);
++
+ 	/* at most 5 SYN_DROPPED log-messages per 30s */
+ 	ratelimit_init(&device->syn_drop_limit, 30ULL * 1000, 5);
+ 
+@@ -2093,8 +2095,6 @@ evdev_device_create(struct libinput_seat *seat,
+ 	if (evdev_configure_device(device) == -1)
+ 		goto err;
+ 
+-	device->dpi = evdev_read_dpi_prop(device);
+-
+ 	if (device->seat_caps == 0) {
+ 		unhandled_device = 1;
+ 		goto err;
+-- 
+2.4.3
+

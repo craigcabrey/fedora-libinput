@@ -1,0 +1,35 @@
+From 07ffabc58c1f967e1efe0b593135e835aa5deed4 Mon Sep 17 00:00:00 2001
+From: Peter Hutterer <peter.hutterer@who-t.net>
+Date: Tue, 23 Jun 2015 12:45:55 +1000
+Subject: [PATCH libinput 6/9] filter: use a tmp variable for the accel factor
+
+No real effect, just makes the diff for debugging printfs smaller.
+
+Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+---
+ src/filter.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/src/filter.c b/src/filter.c
+index 69f78b1..1e05782 100644
+--- a/src/filter.c
++++ b/src/filter.c
+@@ -385,11 +385,14 @@ pointer_accel_profile_linear(struct motion_filter *filter,
+ 	const double max_accel = accel_filter->accel; /* unitless factor */
+ 	const double threshold = accel_filter->threshold; /* units/ms */
+ 	const double incline = accel_filter->incline;
++	double factor;
+ 
+ 	s1 = min(1, 0.3 + speed_in * 10);
+ 	s2 = 1 + (speed_in - threshold) * incline;
+ 
+-	return min(max_accel, s2 > 1 ? s2 : s1);
++	factor =  min(max_accel, s2 > 1 ? s2 : s1);
++
++	return factor;
+ }
+ 
+ double
+-- 
+2.4.3
+

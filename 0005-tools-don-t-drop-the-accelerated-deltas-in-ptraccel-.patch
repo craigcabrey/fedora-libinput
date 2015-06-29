@@ -1,0 +1,40 @@
+From 03a02107c597fd1b3e738002431c35bb2057b7ce Mon Sep 17 00:00:00 2001
+From: Peter Hutterer <peter.hutterer@who-t.net>
+Date: Fri, 26 Jun 2015 10:00:24 +1000
+Subject: [PATCH libinput 5/9] tools: don't drop the accelerated deltas in
+ ptraccel-debug
+
+Leftover from the initial (out-of-tree) implementation where we updated motion
+in place. That hasn't been true since libinput switched to type-safe
+coordinates.
+
+Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+---
+ tools/ptraccel-debug.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/tools/ptraccel-debug.c b/tools/ptraccel-debug.c
+index 8b800ee..335781b 100644
+--- a/tools/ptraccel-debug.c
++++ b/tools/ptraccel-debug.c
+@@ -95,7 +95,7 @@ print_ptraccel_movement(struct motion_filter *filter,
+ 		motion.y = 0;
+ 		time += 12; /* pretend 80Hz data */
+ 
+-		filter_dispatch(filter, &motion, NULL, time);
++		motion = filter_dispatch(filter, &motion, NULL, time);
+ 
+ 		printf("%d	%.3f	%.3f\n", i, motion.x, dx);
+ 
+@@ -129,7 +129,7 @@ print_ptraccel_sequence(struct motion_filter *filter,
+ 		motion.y = 0;
+ 		time += 12; /* pretend 80Hz data */
+ 
+-		filter_dispatch(filter, &motion, NULL, time);
++		motion = filter_dispatch(filter, &motion, NULL, time);
+ 
+ 		printf("%d	%.3f	%.3f\n", i, motion.x, *dx);
+ 	}
+-- 
+2.4.3
+

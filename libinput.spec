@@ -5,7 +5,7 @@
 
 Name:           libinput
 Version:        0.18.0
-Release:        3%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Release:        4%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 License:        MIT
@@ -21,6 +21,18 @@ Source0:        http://www.freedesktop.org/software/libinput/libinput-%{version}
 Patch01: 0001-touchpad-only-send-most-recent-edge-delta-when-trigg.patch
 Patch02: 0001-touchpad-reduce-edge-scroll-motion-threshold-to-3mm.patch
 Patch03: 0001-touchpad-fix-stuck-finger-after-a-click.patch
+
+# https://bugzilla.redhat.com/show_bug.cgi?id=1227039
+Patch04: 0001-filter-reduce-deceleration-to-minimal-speeds-only.patch
+# https://bugzilla.redhat.com/show_bug.cgi?id=1231304
+Patch05: 0002-evdev-read-dpi-before-evdev_configure_device.patch
+Patch06: 0003-evdev-log-device-s-DPI-setting-if-any.patch
+Patch07: 0004-evdev-move-posting-a-trackpoint-scroll-event-into-a-.patch
+Patch08: 0005-tools-don-t-drop-the-accelerated-deltas-in-ptraccel-.patch
+Patch09: 0006-filter-use-a-tmp-variable-for-the-accel-factor.patch
+Patch10: 0007-Drop-motion-normalization-of-unaccelerated-deltas.patch
+Patch11: 0008-filter-pass-the-DPI-to-the-acceleration-filter.patch
+Patch12: 0009-filter-add-a-custom-low-dpi-acceleration.patch
 
 BuildRequires:  git
 BuildRequires:  autoconf automake libtool pkgconfig
@@ -98,6 +110,11 @@ find $RPM_BUILD_ROOT -name '*.la' -delete
 
 
 %changelog
+* Mon Jun 29 2015 Peter Hutterer <peter.hutterer@redhat.com> 0.18.0-4
+- Steepen deceleration curve to get better 1:1 movement on slow speeds
+  (#1231304)
+- Provide custom accel method for <1000dpi mice (#1227039)
+
 * Thu Jun 25 2015 Peter Hutterer <peter.hutterer@redhat.com> 0.18.0-3
 - Fix stuck finger after a clickpad click on resolutionless touchpads
 
