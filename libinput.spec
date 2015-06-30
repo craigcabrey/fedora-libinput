@@ -5,7 +5,7 @@
 
 Name:           libinput
 Version:        0.18.0
-Release:        4%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Release:        5%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 License:        MIT
@@ -33,6 +33,12 @@ Patch09: 0006-filter-use-a-tmp-variable-for-the-accel-factor.patch
 Patch10: 0007-Drop-motion-normalization-of-unaccelerated-deltas.patch
 Patch11: 0008-filter-pass-the-DPI-to-the-acceleration-filter.patch
 Patch12: 0009-filter-add-a-custom-low-dpi-acceleration.patch
+
+# https://bugzilla.redhat.com/show_bug.cgi?id=1233844
+Patch13: 0001-touchpad-move-trackpoint-timer-stuff-into-the-palm-s.patch
+Patch14: 0002-touchpad-always-set-touch-palm.time-on-touch-begin.patch
+Patch15: 0003-touchpad-improve-trackpoint-palm-detection-responsiv.patch
+Patch16: 0004-touchpad-disable-trackpoint-palm-detection-on-small-.patch
 
 BuildRequires:  git
 BuildRequires:  autoconf automake libtool pkgconfig
@@ -110,6 +116,9 @@ find $RPM_BUILD_ROOT -name '*.la' -delete
 
 
 %changelog
+* Wed Jul 01 2015 Peter Hutterer <peter.hutterer@redhat.com> 0.18.0-5
+- Improve trackpoint->touchpad transition responsiveness (#1233844)
+
 * Mon Jun 29 2015 Peter Hutterer <peter.hutterer@redhat.com> 0.18.0-4
 - Steepen deceleration curve to get better 1:1 movement on slow speeds
   (#1231304)
