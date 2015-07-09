@@ -1,0 +1,60 @@
+From 820376e1d3136d903b97588aa547e84e6de16e66 Mon Sep 17 00:00:00 2001
+From: Peter Hutterer <peter.hutterer@who-t.net>
+Date: Fri, 3 Jul 2015 15:17:33 +1000
+Subject: [PATCH libinput 1/3] test: move enable_edge_scroll up
+
+No functional changes, just so we can group those helpers together.
+
+Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+Reviewed-by: Hans de Goede <hdegoede@redhat.com>
+---
+ test/touchpad.c | 26 +++++++++++++-------------
+ 1 file changed, 13 insertions(+), 13 deletions(-)
+
+diff --git a/test/touchpad.c b/test/touchpad.c
+index 443c8c1..60c1df1 100644
+--- a/test/touchpad.c
++++ b/test/touchpad.c
+@@ -32,6 +32,19 @@
+ #include "libinput-util.h"
+ #include "litest.h"
+ 
++static void
++enable_edge_scroll(struct litest_device *dev)
++{
++	enum libinput_config_status status, expected;
++	struct libinput_device *device = dev->libinput_device;
++
++	status = libinput_device_config_scroll_set_method(device,
++					  LIBINPUT_CONFIG_SCROLL_EDGE);
++
++	expected = LIBINPUT_CONFIG_STATUS_SUCCESS;
++	litest_assert_int_eq(status, expected);
++}
++
+ START_TEST(touchpad_1fg_motion)
+ {
+ 	struct litest_device *dev = litest_current_device();
+@@ -1442,19 +1455,6 @@ START_TEST(touchpad_scroll_natural)
+ }
+ END_TEST
+ 
+-static void
+-enable_edge_scroll(struct litest_device *dev)
+-{
+-	enum libinput_config_status status, expected;
+-	struct libinput_device *device = dev->libinput_device;
+-
+-	status = libinput_device_config_scroll_set_method(device,
+-					  LIBINPUT_CONFIG_SCROLL_EDGE);
+-
+-	expected = LIBINPUT_CONFIG_STATUS_SUCCESS;
+-	litest_assert_int_eq(status, expected);
+-}
+-
+ START_TEST(touchpad_edge_scroll)
+ {
+ 	struct litest_device *dev = litest_current_device();
+-- 
+2.4.3
+

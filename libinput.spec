@@ -5,7 +5,7 @@
 
 Name:           libinput
 Version:        0.19.0
-Release:        1%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Release:        2%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 License:        MIT
@@ -17,6 +17,10 @@ Source2:        commitid
 %else
 Source0:        http://www.freedesktop.org/software/libinput/libinput-%{version}.tar.xz
 %endif
+
+Patch01:        0001-test-move-enable_edge_scroll-up.patch
+Patch02:        0002-test-add-helper-function-for-enabling-click-methods.patch
+Patch03:        0003-touchpad-allow-edge-scrolling-on-clickpads.patch
 
 BuildRequires:  git
 BuildRequires:  autoconf automake libtool pkgconfig
@@ -94,6 +98,9 @@ find $RPM_BUILD_ROOT -name '*.la' -delete
 
 
 %changelog
+* Thu Jul 09 2015 Peter Hutterer <peter.hutterer@redhat.com> 0.19.0-2
+- enable edge scrolling on clickpads (#1225579)
+
 * Mon Jul 06 2015 Peter Hutterer <peter.hutterer@redhat.com> 0.19.0-1
 - libinput 0.19.0
 
