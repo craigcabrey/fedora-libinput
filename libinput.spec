@@ -5,7 +5,7 @@
 
 Name:           libinput
 Version:        0.20.0
-Release:        1%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Release:        2%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 License:        MIT
@@ -20,6 +20,7 @@ Source0:        http://www.freedesktop.org/software/libinput/libinput-%{version}
 
 Patch04:        0001-touchpad-only-edge-scroll-while-the-finger-is-in-the.patch
 Patch05:        0001-udev-don-t-install-the-litest-udev-rules.patch
+Patch06:        0001-evdev-restore-pointing-stick-const-accel-property-pa.patch
 
 BuildRequires:  git
 BuildRequires:  autoconf automake libtool pkgconfig
@@ -97,6 +98,9 @@ find $RPM_BUILD_ROOT -name '*.la' -delete
 
 
 %changelog
+* Tue Jul 21 2015 Peter Hutterer <peter.hutterer@redhat.com> 0.20.0-2
+- Restore parsing for trackpoing const accel
+
 * Thu Jul 16 2015 Peter Hutterer <peter.hutterer@redhat.com> 0.20.0-1
 - libinput 0.20
 
