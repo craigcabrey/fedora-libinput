@@ -5,7 +5,7 @@
 
 Name:           libinput
 Version:        0.20.0
-Release:        2%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Release:        3%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 License:        MIT
@@ -21,6 +21,8 @@ Source0:        http://www.freedesktop.org/software/libinput/libinput-%{version}
 Patch04:        0001-touchpad-only-edge-scroll-while-the-finger-is-in-the.patch
 Patch05:        0001-udev-don-t-install-the-litest-udev-rules.patch
 Patch06:        0001-evdev-restore-pointing-stick-const-accel-property-pa.patch
+# Fedora-specific, remove when thumb detection is fixed upstream
+Patch07:        0001-Disable-thumb-detection-it-s-too-aggressive-1246093.patch
 
 BuildRequires:  git
 BuildRequires:  autoconf automake libtool pkgconfig
@@ -98,6 +100,9 @@ find $RPM_BUILD_ROOT -name '*.la' -delete
 
 
 %changelog
+* Fri Jul 24 2015 Peter Hutterer <peter.hutterer@redhat.com> 0.20.0-3
+- Disable thumb detection, too many false positives (#1246093)
+
 * Tue Jul 21 2015 Peter Hutterer <peter.hutterer@redhat.com> 0.20.0-2
 - Restore parsing for trackpoing const accel
 
