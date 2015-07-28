@@ -1,0 +1,253 @@
+From a4923241ca5b14e78224b50f9b0056f940e0cb7d Mon Sep 17 00:00:00 2001
+From: Peter Hutterer <peter.hutterer@who-t.net>
+Date: Tue, 14 Jul 2015 10:27:46 +1000
+Subject: [PATCH libinput 4/4] touchpad: disable 2fg scrolling on Synaptics
+ semi-mt touchpads
+
+These touchpads have a terrible resolution when two fingers are down, causing
+scrolling to jump around a lot. That then turns into bug reports that we can't
+do much about, the data is simply garbage.
+
+https://bugs.freedesktop.org/show_bug.cgi?id=91135
+
+Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+Reviewed-by: Hans de Goede <hdegoede@redhat.com>
+(cherry picked from commit eb146677eb5abb7951af4ead80874c992915b90d)
+---
+ doc/scrolling.dox                    |  7 +++++++
+ src/evdev-mt-touchpad.c              | 36 +++++++++++++++++++++++++++++-------
+ src/evdev.c                          |  1 +
+ src/evdev.h                          |  1 +
+ test/litest-device-synaptics-hover.c | 10 ++++++++++
+ test/touchpad.c                      | 21 ++++++++++++++++++---
+ udev/libinput-model-quirks.c         | 26 ++++++++++++++++++++++++++
+ 7 files changed, 92 insertions(+), 10 deletions(-)
+
+diff --git a/doc/scrolling.dox b/doc/scrolling.dox
+index 658fe4b..0c03c98 100644
+--- a/doc/scrolling.dox
++++ b/doc/scrolling.dox
+@@ -44,6 +44,13 @@ movements will translate into tiny scroll movements.
+ Scrolling in both directions at once is possible by meeting the required
+ distance thresholds to enable each direction separately.
+ 
++Two-finger scrolling requires the touchpad to track both touch points with
++reasonable precision. Unfortunately, some so-called "semi-mt" touchpads can
++only track the bounding box of the two fingers rather than the actual
++position of each finger. In addition, that bounding box usually suffers from
++a low resolution, causing jumpy movement during two-finger scrolling.
++libinput does not provide two-finger scrolling on those touchpads.
++
+ @section edge_scrolling Edge scrolling
+ 
+ On some touchpads, edge scrolling is available, triggered by moving a single
+diff --git a/src/evdev-mt-touchpad.c b/src/evdev-mt-touchpad.c
+index c5c54bb..a9f4000 100644
+--- a/src/evdev-mt-touchpad.c
++++ b/src/evdev-mt-touchpad.c
+@@ -1366,18 +1366,29 @@ tp_init_accel(struct tp_dispatch *tp, double diagonal)
+ }
+ 
+ static uint32_t
+-tp_scroll_config_scroll_method_get_methods(struct libinput_device *device)
++tp_scroll_get_methods(struct tp_dispatch *tp)
+ {
+-	struct evdev_device *evdev = (struct evdev_device*)device;
+-	struct tp_dispatch *tp = (struct tp_dispatch*)evdev->dispatch;
+ 	uint32_t methods = LIBINPUT_CONFIG_SCROLL_EDGE;
+ 
+-	if (tp->ntouches >= 2)
++	/* some Synaptics semi-mt touchpads have a terrible 2fg resolution,
++	 * causing scroll jumps. For all other 2fg touchpads, we enable 2fg
++	 * scrolling */
++	if (tp->ntouches >= 2 &&
++	    (tp->device->model_flags & EVDEV_MODEL_JUMPING_SEMI_MT) == 0)
+ 		methods |= LIBINPUT_CONFIG_SCROLL_2FG;
+ 
+ 	return methods;
+ }
+ 
++static uint32_t
++tp_scroll_config_scroll_method_get_methods(struct libinput_device *device)
++{
++	struct evdev_device *evdev = (struct evdev_device*)device;
++	struct tp_dispatch *tp = (struct tp_dispatch*)evdev->dispatch;
++
++	return tp_scroll_get_methods(tp);
++}
++
+ static enum libinput_config_status
+ tp_scroll_config_scroll_method_set_method(struct libinput_device *device,
+ 		        enum libinput_config_scroll_method method)
+@@ -1409,10 +1420,21 @@ tp_scroll_config_scroll_method_get_method(struct libinput_device *device)
+ static enum libinput_config_scroll_method
+ tp_scroll_get_default_method(struct tp_dispatch *tp)
+ {
+-	if (tp->ntouches >= 2)
+-		return LIBINPUT_CONFIG_SCROLL_2FG;
++	uint32_t methods;
++	enum libinput_config_scroll_method method;
++
++	methods = tp_scroll_get_methods(tp);
++
++	if (methods & LIBINPUT_CONFIG_SCROLL_2FG)
++		method = LIBINPUT_CONFIG_SCROLL_2FG;
+ 	else
+-		return LIBINPUT_CONFIG_SCROLL_EDGE;
++		method = LIBINPUT_CONFIG_SCROLL_EDGE;
++
++	if ((methods & method) == 0)
++		log_bug_libinput(tp_libinput_context(tp),
++				 "Invalid default scroll method %d\n",
++				 method);
++	return method;
+ }
+ 
+ static enum libinput_config_scroll_method
+diff --git a/src/evdev.c b/src/evdev.c
+index 96ad2a7..35fc2a3 100644
+--- a/src/evdev.c
++++ b/src/evdev.c
+@@ -1538,6 +1538,7 @@ evdev_read_model_flags(struct evdev_device *device)
+ 		{ "LIBINPUT_MODEL_WACOM_TOUCHPAD", EVDEV_MODEL_WACOM_TOUCHPAD },
+ 		{ "LIBINPUT_MODEL_ALPS_TOUCHPAD", EVDEV_MODEL_ALPS_TOUCHPAD },
+ 		{ "LIBINPUT_MODEL_SYNAPTICS_SERIAL_TOUCHPAD", EVDEV_MODEL_SYNAPTICS_SERIAL_TOUCHPAD },
++		{ "LIBINPUT_MODEL_JUMPING_SEMI_MT", EVDEV_MODEL_JUMPING_SEMI_MT },
+ 		{ NULL, EVDEV_MODEL_DEFAULT },
+ 	};
+ 	const struct model_map *m = model_map;
+diff --git a/src/evdev.h b/src/evdev.h
+index 6a71232..1c4ebc0 100644
+--- a/src/evdev.h
++++ b/src/evdev.h
+@@ -106,6 +106,7 @@ enum evdev_device_model {
+ 	EVDEV_MODEL_WACOM_TOUCHPAD = (1 << 7),
+ 	EVDEV_MODEL_ALPS_TOUCHPAD = (1 << 8),
+ 	EVDEV_MODEL_SYNAPTICS_SERIAL_TOUCHPAD = (1 << 9),
++	EVDEV_MODEL_JUMPING_SEMI_MT = (1 << 10),
+ };
+ 
+ struct mt_slot {
+diff --git a/test/litest-device-synaptics-hover.c b/test/litest-device-synaptics-hover.c
+index 2cc9b72..3c36aff 100644
+--- a/test/litest-device-synaptics-hover.c
++++ b/test/litest-device-synaptics-hover.c
+@@ -102,6 +102,15 @@ static struct input_absinfo absinfo[] = {
+ 	{ .value = -1 }
+ };
+ 
++static const char udev_rule[] =
++"ACTION==\"remove\", GOTO=\"synaptics_semi_mt_end\"\n"
++"KERNEL!=\"event*\", GOTO=\"synaptics_semi_mt_end\"\n"
++"\n"
++"ATTRS{name}==\"SynPS/2 Synaptics TouchPad\",\n"
++"    ENV{LIBINPUT_MODEL_JUMPING_SEMI_MT}=\"1\"\n"
++"\n"
++"LABEL=\"synaptics_semi_mt_end\"";
++
+ struct litest_test_device litest_synaptics_hover_device = {
+ 	.type = LITEST_SYNAPTICS_HOVER_SEMI_MT,
+ 	.features = LITEST_TOUCHPAD | LITEST_SEMI_MT | LITEST_BUTTON,
+@@ -114,6 +123,7 @@ struct litest_test_device litest_synaptics_hover_device = {
+ 	.id = &input_id,
+ 	.events = events,
+ 	.absinfo = absinfo,
++	.udev_rule = udev_rule,
+ };
+ 
+ static void
+diff --git a/test/touchpad.c b/test/touchpad.c
+index 12bceea..759f82a 100644
+--- a/test/touchpad.c
++++ b/test/touchpad.c
+@@ -69,6 +69,16 @@ enable_buttonareas(struct litest_device *dev)
+ 	litest_assert_int_eq(status, expected);
+ }
+ 
++static inline int
++is_synaptics_semi_mt(struct litest_device *dev)
++{
++	struct libevdev *evdev = dev->evdev;
++
++	return libevdev_has_property(evdev, INPUT_PROP_SEMI_MT) &&
++		libevdev_get_id_vendor(evdev) == 0x2 &&
++		libevdev_get_id_product(evdev) == 0x7;
++}
++
+ START_TEST(touchpad_1fg_motion)
+ {
+ 	struct litest_device *dev = litest_current_device();
+@@ -1581,10 +1591,14 @@ START_TEST(touchpad_scroll_defaults)
+ 
+ 	method = libinput_device_config_scroll_get_methods(device);
+ 	ck_assert(method & LIBINPUT_CONFIG_SCROLL_EDGE);
+-	if (libevdev_get_num_slots(evdev) > 1)
++	if (libevdev_get_num_slots(evdev) > 1 &&
++	    !is_synaptics_semi_mt(dev))
+ 		ck_assert(method & LIBINPUT_CONFIG_SCROLL_2FG);
++	else
++		ck_assert((method & LIBINPUT_CONFIG_SCROLL_2FG) == 0);
+ 
+-	if (libevdev_get_num_slots(evdev) > 1)
++	if (libevdev_get_num_slots(evdev) > 1 &&
++	    !is_synaptics_semi_mt(dev))
+ 		expected = LIBINPUT_CONFIG_SCROLL_2FG;
+ 	else
+ 		expected = LIBINPUT_CONFIG_SCROLL_EDGE;
+@@ -1600,7 +1614,8 @@ START_TEST(touchpad_scroll_defaults)
+ 	status = libinput_device_config_scroll_set_method(device,
+ 					  LIBINPUT_CONFIG_SCROLL_2FG);
+ 
+-	if (libevdev_get_num_slots(evdev) > 1)
++	if (libevdev_get_num_slots(evdev) > 1 &&
++	    !is_synaptics_semi_mt(dev))
+ 		ck_assert_int_eq(status, LIBINPUT_CONFIG_STATUS_SUCCESS);
+ 	else
+ 		ck_assert_int_eq(status, LIBINPUT_CONFIG_STATUS_UNSUPPORTED);
+diff --git a/udev/libinput-model-quirks.c b/udev/libinput-model-quirks.c
+index fc3dbe8..0e737a4 100644
+--- a/udev/libinput-model-quirks.c
++++ b/udev/libinput-model-quirks.c
+@@ -69,6 +69,30 @@ handle_touchpad_alps(struct udev_device *device)
+ }
+ 
+ static void
++handle_touchpad_synaptics(struct udev_device *device)
++{
++	const char *product, *props;
++	int bus, vid, pid, version;
++	int prop;
++
++	product = prop_value(device, "PRODUCT");
++	if (!product)
++		return;
++
++	if (sscanf(product, "%x/%x/%x/%x", &bus, &vid, &pid, &version) != 4)
++		return;
++
++	if (bus != BUS_I8042 || vid != 0x2 || pid != 0x7)
++		return;
++
++	props = prop_value(device, "PROP");
++	if (sscanf(props, "%x", &prop) != 1)
++		return;
++	if (prop & (1 << INPUT_PROP_SEMI_MT))
++		printf("LIBINPUT_MODEL_JUMPING_SEMI_MT=1\n");
++}
++
++static void
+ handle_touchpad(struct udev_device *device)
+ {
+ 	const char *name = NULL;
+@@ -79,6 +103,8 @@ handle_touchpad(struct udev_device *device)
+ 
+ 	if (strstr(name, "AlpsPS/2 ALPS") != NULL)
+ 		handle_touchpad_alps(device);
++	if (strstr(name, "Synaptics ") != NULL)
++		handle_touchpad_synaptics(device);
+ }
+ 
+ int main(int argc, char **argv)
+-- 
+2.4.3
+

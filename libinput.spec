@@ -5,7 +5,7 @@
 
 Name:           libinput
 Version:        0.20.0
-Release:        3%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Release:        4%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 License:        MIT
@@ -23,6 +23,11 @@ Patch05:        0001-udev-don-t-install-the-litest-udev-rules.patch
 Patch06:        0001-evdev-restore-pointing-stick-const-accel-property-pa.patch
 # Fedora-specific, remove when thumb detection is fixed upstream
 Patch07:        0001-Disable-thumb-detection-it-s-too-aggressive-1246093.patch
+# Bug 1235175 - Synaptics Touchpad two-finger scrolling jumps 
+Patch08:        0001-touchpad-remove-a-leftover-check-for-fake-resolution.patch
+Patch09:        0002-evdev-allow-for-multiple-LIBINPUT_MODEL_-flags-per-d.patch
+Patch10:        0003-Tag-synaptics-serial-touchpads-with-a-LIBINPUT_MODEL.patch
+Patch11:        0004-touchpad-disable-2fg-scrolling-on-Synaptics-semi-mt-.patch
 
 BuildRequires:  git
 BuildRequires:  autoconf automake libtool pkgconfig
@@ -100,6 +105,9 @@ find $RPM_BUILD_ROOT -name '*.la' -delete
 
 
 %changelog
+* Wed Jul 29 2015 Peter Hutterer <peter.hutterer@redhat.com> 0.20.0-4
+- Disable 2fg scrolling on Synaptics semi-mt (#1235175)
+
 * Fri Jul 24 2015 Peter Hutterer <peter.hutterer@redhat.com> 0.20.0-3
 - Disable thumb detection, too many false positives (#1246093)
 

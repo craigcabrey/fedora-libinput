@@ -1,0 +1,47 @@
+From 7ac32de18ca54a3a7d0b8147facc0ba7ebb9dbd4 Mon Sep 17 00:00:00 2001
+From: Peter Hutterer <peter.hutterer@who-t.net>
+Date: Thu, 16 Jul 2015 15:54:47 +1000
+Subject: [PATCH libinput 1/4] touchpad: remove a leftover check for fake
+ resolution
+
+obsolete since 8658ff159d416b6a567acb2aaf72b27887ad8576. And once we remove
+that all we checkf or is Apple models which we set a resolution for in
+systemd. So that check is obsolete now too.
+
+Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+(cherry picked from commit 4ca70c813f750721592d1a68aced385560705256)
+---
+ src/evdev-mt-touchpad.c | 15 +++++----------
+ 1 file changed, 5 insertions(+), 10 deletions(-)
+
+diff --git a/src/evdev-mt-touchpad.c b/src/evdev-mt-touchpad.c
+index 360f930..80827da 100644
+--- a/src/evdev-mt-touchpad.c
++++ b/src/evdev-mt-touchpad.c
+@@ -1464,18 +1464,13 @@ tp_init_palmdetect(struct tp_dispatch *tp,
+ 
+ 	/* Wacom doesn't have internal touchpads,
+ 	 * Apple touchpads are always big enough to warrant palm detection */
+-	if (device->model == EVDEV_MODEL_WACOM_TOUCHPAD) {
++	if (device->model == EVDEV_MODEL_WACOM_TOUCHPAD)
+ 		return 0;
+-	} else if (device->model != EVDEV_MODEL_APPLE_TOUCHPAD) {
+-		/* We don't know how big the touchpad is */
+-		if (device->abs.absinfo_x->resolution == 1)
+-			return 0;
+ 
+-		/* Enable palm detection on touchpads >= 70 mm. Anything smaller
+-		   probably won't need it, until we find out it does */
+-		if (width/device->abs.absinfo_x->resolution < 70)
+-			return 0;
+-	}
++	/* Enable palm detection on touchpads >= 70 mm. Anything smaller
++	   probably won't need it, until we find out it does */
++	if (width/device->abs.absinfo_x->resolution < 70)
++		return 0;
+ 
+ 	/* palm edges are 5% of the width on each side */
+ 	tp->palm.right_edge = device->abs.absinfo_x->maximum - width * 0.05;
+-- 
+2.4.3
+
