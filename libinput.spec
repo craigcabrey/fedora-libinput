@@ -5,7 +5,7 @@
 
 Name:           libinput
 Version:        0.20.0
-Release:        4%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Release:        5%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 License:        MIT
@@ -28,6 +28,8 @@ Patch08:        0001-touchpad-remove-a-leftover-check-for-fake-resolution.patch
 Patch09:        0002-evdev-allow-for-multiple-LIBINPUT_MODEL_-flags-per-d.patch
 Patch10:        0003-Tag-synaptics-serial-touchpads-with-a-LIBINPUT_MODEL.patch
 Patch11:        0004-touchpad-disable-2fg-scrolling-on-Synaptics-semi-mt-.patch
+# Bug 1246651 - two-finger scroll stopped working with upgrade to 0.20.0-1
+Patch12:        0001-udev-add-size-hint-for-appletouch-one-button-touchpa.patch
 
 BuildRequires:  git
 BuildRequires:  autoconf automake libtool pkgconfig
@@ -105,6 +107,9 @@ find $RPM_BUILD_ROOT -name '*.la' -delete
 
 
 %changelog
+* Wed Jul 29 2015 Peter Hutterer <peter.hutterer@redhat.com> 0.20.0-5
+- Add a size hint for Apple one-button touchpads (#1246651)
+
 * Wed Jul 29 2015 Peter Hutterer <peter.hutterer@redhat.com> 0.20.0-4
 - Disable 2fg scrolling on Synaptics semi-mt (#1235175)
 

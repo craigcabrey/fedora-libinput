@@ -1,0 +1,27 @@
+From b849aaf4d3441f3d007889a06ff105e49d197be8 Mon Sep 17 00:00:00 2001
+From: Fedora X Ninjas <x@fedoraproject.org>
+Date: Tue, 28 Jul 2015 08:23:29 +1000
+Subject: [PATCH] udev: add size hint for appletouch one-button touchpad
+
+---
+ udev/90-libinput-model-quirks.hwdb | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/udev/90-libinput-model-quirks.hwdb b/udev/90-libinput-model-quirks.hwdb
+index eec00b6..2d2a449 100644
+--- a/udev/90-libinput-model-quirks.hwdb
++++ b/udev/90-libinput-model-quirks.hwdb
+@@ -34,6 +34,10 @@ libinput:touchpad:input:b0005v05ACp*
+  LIBINPUT_MODEL_APPLE_TOUCHPAD=1
+  LIBINPUT_ATTR_SIZE_HINT=104x75
+ 
++# appletouch one-button touchpad (rhbz#1246651)
++libinput:touchpad:input:b0003v05ACp021B*
++ LIBINPUT_ATTR_SIZE_HINT=100x48
++
+ ##########################################
+ # Elantech
+ ##########################################
+-- 
+2.4.3
+
