@@ -5,7 +5,7 @@
 
 Name:           libinput
 Version:        0.20.0
-Release:        5%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Release:        6%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 License:        MIT
@@ -30,6 +30,9 @@ Patch10:        0003-Tag-synaptics-serial-touchpads-with-a-LIBINPUT_MODEL.patch
 Patch11:        0004-touchpad-disable-2fg-scrolling-on-Synaptics-semi-mt-.patch
 # Bug 1246651 - two-finger scroll stopped working with upgrade to 0.20.0-1
 Patch12:        0001-udev-add-size-hint-for-appletouch-one-button-touchpa.patch
+Patch13:        0002-gestures-check-ntouches-not-just-num_slots-for-the-n.patch
+# Bug 1246868 Two finger scrolling does not work with first and fourth fingers (cf. Synaptics driver)
+Patch14:        0001-touchpad-drop-distance-threshold-to-detect-pinches.patch
 
 BuildRequires:  git
 BuildRequires:  autoconf automake libtool pkgconfig
@@ -107,6 +110,10 @@ find $RPM_BUILD_ROOT -name '*.la' -delete
 
 
 %changelog
+* Thu Jul 30 2015 Peter Hutterer <peter.hutterer@redhat.com> 0.20.0-6
+- Fix broken 2fg scrolling on single-touch touchpads (#1246651)
+- Drop distance threshold for 2fg gesture detection (#1246868)
+
 * Wed Jul 29 2015 Peter Hutterer <peter.hutterer@redhat.com> 0.20.0-5
 - Add a size hint for Apple one-button touchpads (#1246651)
 
