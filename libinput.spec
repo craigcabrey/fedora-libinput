@@ -5,7 +5,7 @@
 
 Name:           libinput
 Version:        0.21.0
-Release:        1%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Release:        2%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 License:        MIT
@@ -20,6 +20,8 @@ Source0:        http://www.freedesktop.org/software/libinput/libinput-%{version}
 
 # Not upstream, keep until kernel 4.2 or 4.1.x with dbf3c37086 
 Patch01:        0001-touchpad-serial-synaptics-need-to-fake-new-touches-o.patch
+
+Patch02:        0001-filter-fix-acceleration-threshold-assignment.patch
 
 BuildRequires:  git
 BuildRequires:  autoconf automake libtool pkgconfig
@@ -97,6 +99,9 @@ find $RPM_BUILD_ROOT -name '*.la' -delete
 
 
 %changelog
+* Tue Aug 04 2015 Peter Hutterer <peter.hutterer@redhat.com> 0.21.0-2
+- Fix pointer speed configuration, broke with 0.21.0
+
 * Tue Aug 04 2015 Peter Hutterer <peter.hutterer@redhat.com> 0.21.0-1
 - libinput 0.21.0
 - fix 3fg touch detection on Synaptics semi-mt touchpads
