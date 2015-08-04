@@ -4,8 +4,8 @@
 %global gitversion 58abea394
 
 Name:           libinput
-Version:        0.20.0
-Release:        6%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Version:        0.21.0
+Release:        1%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 License:        MIT
@@ -18,21 +18,8 @@ Source2:        commitid
 Source0:        http://www.freedesktop.org/software/libinput/libinput-%{version}.tar.xz
 %endif
 
-Patch04:        0001-touchpad-only-edge-scroll-while-the-finger-is-in-the.patch
-Patch05:        0001-udev-don-t-install-the-litest-udev-rules.patch
-Patch06:        0001-evdev-restore-pointing-stick-const-accel-property-pa.patch
-# Fedora-specific, remove when thumb detection is fixed upstream
-Patch07:        0001-Disable-thumb-detection-it-s-too-aggressive-1246093.patch
-# Bug 1235175 - Synaptics Touchpad two-finger scrolling jumps 
-Patch08:        0001-touchpad-remove-a-leftover-check-for-fake-resolution.patch
-Patch09:        0002-evdev-allow-for-multiple-LIBINPUT_MODEL_-flags-per-d.patch
-Patch10:        0003-Tag-synaptics-serial-touchpads-with-a-LIBINPUT_MODEL.patch
-Patch11:        0004-touchpad-disable-2fg-scrolling-on-Synaptics-semi-mt-.patch
-# Bug 1246651 - two-finger scroll stopped working with upgrade to 0.20.0-1
-Patch12:        0001-udev-add-size-hint-for-appletouch-one-button-touchpa.patch
-Patch13:        0002-gestures-check-ntouches-not-just-num_slots-for-the-n.patch
-# Bug 1246868 Two finger scrolling does not work with first and fourth fingers (cf. Synaptics driver)
-Patch14:        0001-touchpad-drop-distance-threshold-to-detect-pinches.patch
+# Not upstream, keep until kernel 4.2 or 4.1.x with dbf3c37086 
+Patch01:        0001-touchpad-serial-synaptics-need-to-fake-new-touches-o.patch
 
 BuildRequires:  git
 BuildRequires:  autoconf automake libtool pkgconfig
@@ -110,6 +97,10 @@ find $RPM_BUILD_ROOT -name '*.la' -delete
 
 
 %changelog
+* Tue Aug 04 2015 Peter Hutterer <peter.hutterer@redhat.com> 0.21.0-1
+- libinput 0.21.0
+- fix 3fg touch detection on Synaptics semi-mt touchpads
+
 * Thu Jul 30 2015 Peter Hutterer <peter.hutterer@redhat.com> 0.20.0-6
 - Fix broken 2fg scrolling on single-touch touchpads (#1246651)
 - Drop distance threshold for 2fg gesture detection (#1246868)
