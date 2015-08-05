@@ -1,0 +1,81 @@
+From 323357335db0a470fdcc7fe4f1929aac2154e214 Mon Sep 17 00:00:00 2001
+From: Peter Hutterer <peter.hutterer@who-t.net>
+Date: Wed, 5 Aug 2015 10:55:39 +1000
+Subject: [PATCH libinput] evdev: split scroll threshold and direction lock
+ threshold into two
+
+The previous code used a 5mm threshold before axis events were posted. This
+threshold was on top of the 2mm 2fg threshold (and timeout handling) in the
+gesture code and effectively prevented events from being sent after a timeout,
+or in the 2mm-5mm range.
+
+We still want a directional lock though, so split the two out. The default 5mm
+threshold is set to 0 for touchpads since we have our own handling of the
+threshold there. The directional lock only applies once scrollin has started
+and remains on 5mm.
+
+Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+---
+ src/evdev-mt-touchpad.c | 5 +++--
+ src/evdev.c             | 5 +++--
+ src/evdev.h             | 1 +
+ 3 files changed, 7 insertions(+), 4 deletions(-)
+
+diff --git a/src/evdev-mt-touchpad.c b/src/evdev-mt-touchpad.c
+index a683d9a..872da98 100644
+--- a/src/evdev-mt-touchpad.c
++++ b/src/evdev-mt-touchpad.c
+@@ -1628,8 +1628,9 @@ tp_init_scroll(struct tp_dispatch *tp, struct evdev_device *device)
+ 	tp->scroll.method = tp_scroll_get_default_method(tp);
+ 	tp->device->base.config.scroll_method = &tp->scroll.config_method;
+ 
+-	/* In mm for touchpads with valid resolution, see tp_init_accel() */
+-	tp->device->scroll.threshold = 5.0;
++	 /* In mm for touchpads with valid resolution, see tp_init_accel() */
++	tp->device->scroll.threshold = 0.0;
++	tp->device->scroll.direction_lock_threshold = 5.0;
+ 
+ 	return 0;
+ }
+diff --git a/src/evdev.c b/src/evdev.c
+index 17c2604..53ebf9d 100644
+--- a/src/evdev.c
++++ b/src/evdev.c
+@@ -2146,6 +2146,7 @@ evdev_device_create(struct libinput_seat *seat,
+ 	device->pending_event = EVDEV_NONE;
+ 	device->devname = libevdev_get_name(device->evdev);
+ 	device->scroll.threshold = 5.0; /* Default may be overridden */
++	device->scroll.direction_lock_threshold = 5.0; /* Default may be overridden */
+ 	device->scroll.direction = 0;
+ 	device->scroll.wheel_click_angle =
+ 		evdev_read_wheel_click_prop(device);
+@@ -2414,12 +2415,12 @@ evdev_post_scroll(struct evdev_device *device,
+ 	   trigger speed to start scrolling in the other direction */
+ 	} else if (!evdev_is_scrolling(device,
+ 			       LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL)) {
+-		if (fabs(delta->y) >= device->scroll.threshold)
++		if (fabs(delta->y) >= device->scroll.direction_lock_threshold)
+ 			evdev_start_scrolling(device,
+ 				      LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL);
+ 	} else if (!evdev_is_scrolling(device,
+ 				LIBINPUT_POINTER_AXIS_SCROLL_HORIZONTAL)) {
+-		if (fabs(delta->x) >= device->scroll.threshold)
++		if (fabs(delta->x) >= device->scroll.direction_lock_threshold)
+ 			evdev_start_scrolling(device,
+ 				      LIBINPUT_POINTER_AXIS_SCROLL_HORIZONTAL);
+ 	}
+diff --git a/src/evdev.h b/src/evdev.h
+index be5df0d..65c5a41 100644
+--- a/src/evdev.h
++++ b/src/evdev.h
+@@ -166,6 +166,7 @@ struct evdev_device {
+ 		void (*change_scroll_method)(struct evdev_device *device);
+ 		bool button_scroll_active;
+ 		double threshold;
++		double direction_lock_threshold;
+ 		uint32_t direction;
+ 		struct normalized_coords buildup;
+ 
+-- 
+2.4.3
+

@@ -5,7 +5,7 @@
 
 Name:           libinput
 Version:        0.21.0
-Release:        2%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Release:        3%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 License:        MIT
@@ -22,6 +22,8 @@ Source0:        http://www.freedesktop.org/software/libinput/libinput-%{version}
 Patch01:        0001-touchpad-serial-synaptics-need-to-fake-new-touches-o.patch
 
 Patch02:        0001-filter-fix-acceleration-threshold-assignment.patch
+# Bug 1249365 - Two finger scrolling is insensitive for small movements, then too sensitive
+Patch03:        0001-evdev-split-scroll-threshold-and-direction-lock-thre.patch
 
 BuildRequires:  git
 BuildRequires:  autoconf automake libtool pkgconfig
@@ -99,6 +101,9 @@ find $RPM_BUILD_ROOT -name '*.la' -delete
 
 
 %changelog
+* Wed Aug 05 2015 Peter Hutterer <peter.hutterer@redhat.com> 0.21.0-3
+- Fix 2fg scroll threshold handling (#1249365)
+
 * Tue Aug 04 2015 Peter Hutterer <peter.hutterer@redhat.com> 0.21.0-2
 - Fix pointer speed configuration, broke with 0.21.0
 
