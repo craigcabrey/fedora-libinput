@@ -5,7 +5,7 @@
 
 Name:           libinput
 Version:        1.0.1
-Release:        2%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Release:        3%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 License:        MIT
@@ -23,6 +23,9 @@ Patch01:        0001-touchpad-serial-synaptics-need-to-fake-new-touches-o.patch
 
 # Bug 1256045 - Libinput regularly interprets two-finger scrolling as right-mouse click
 Patch02:        0001-touchpad-don-t-tap-for-2fg-down-followed-by-a-single.patch
+
+# fdo Bug 92016 - Multi-tap-and-drag sends one too many clicks
+Patch03:        0001-touchpad-fix-the-number-of-button-clicks-in-multitap.patch
 
 BuildRequires:  git
 BuildRequires:  autoconf automake libtool pkgconfig
@@ -100,6 +103,9 @@ find $RPM_BUILD_ROOT -name '*.la' -delete
 
 
 %changelog
+* Sat Sep 19 2015 Peter Hutterer <peter.hutterer@redhat.com> 1.0.1-3
+- Fix the number of clicks sent in multitap (fdo #92016)
+
 * Mon Sep 07 2015 Peter Hutterer <peter.hutterer@redhat.com> 1.0.1-2
 - Don't interpret short scrolls as right click (#1256045)
 
