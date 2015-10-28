@@ -1,0 +1,30 @@
+From 48f1c63007c416c03363d27f4956e50b6e1c32b0 Mon Sep 17 00:00:00 2001
+From: Peter Hutterer <peter.hutterer@who-t.net>
+Date: Wed, 28 Oct 2015 09:05:37 +1000
+Subject: [PATCH libinput 3/5] evdev: don't handle motion events if the device
+ isn't a pointer device
+
+This check is already in place for all other event types.
+
+Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+---
+ src/evdev.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/src/evdev.c b/src/evdev.c
+index 4c947d6..ba1b568 100644
+--- a/src/evdev.c
++++ b/src/evdev.c
+@@ -289,6 +289,9 @@ evdev_flush_pending_event(struct evdev_device *device, uint64_t time)
+ 	case EVDEV_NONE:
+ 		return;
+ 	case EVDEV_RELATIVE_MOTION:
++		if (!(device->seat_caps & EVDEV_DEVICE_POINTER))
++			break;
++
+ 		normalize_delta(device, &device->rel, &unaccel);
+ 		raw.x = device->rel.x;
+ 		raw.y = device->rel.y;
+-- 
+2.4.3
+
