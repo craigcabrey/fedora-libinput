@@ -5,7 +5,7 @@
 
 Name:           libinput
 Version:        1.1.0
-Release:        2%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Release:        3%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 License:        MIT
@@ -26,6 +26,7 @@ Patch03:        0002-evdev-log-a-bug-for-missing-pointer-accel-on-relativ.patch
 Patch04:        0003-evdev-don-t-handle-motion-events-if-the-device-isn-t.patch
 Patch05:        0004-evdev-init-pointer-acceleration-for-any-device-with-.patch
 Patch06:        0005-test-add-Asus-RoG-Gladius-mouse.patch
+Patch07:        0001-Fix-libinput_device_group_find_group-to-return-NULL-.patch
 
 BuildRequires:  git
 BuildRequires:  autoconf automake libtool pkgconfig
@@ -103,6 +104,9 @@ find $RPM_BUILD_ROOT -name '*.la' -delete
 
 
 %changelog
+* Mon Nov 02 2015 Peter Hutterer <peter.hutterer@redhat.com> 1.1.0-3
+- Fix invalid device group pointer, causing invalid memory access
+
 * Wed Oct 28 2015 Peter Hutterer <peter.hutterer@redhat.com> 1.1.0-2
 - Fix crash triggered by Asus RoG Gladius mouse (#1275407)
 

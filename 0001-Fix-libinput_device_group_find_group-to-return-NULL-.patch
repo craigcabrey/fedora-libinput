@@ -1,0 +1,31 @@
+From 9949d4ee0859ef8361afc00363a941ff3d133d88 Mon Sep 17 00:00:00 2001
+From: Peter Hutterer <peter.hutterer@who-t.net>
+Date: Mon, 2 Nov 2015 08:46:25 +1000
+Subject: [PATCH libinput] Fix libinput_device_group_find_group() to return
+ NULL on failure
+
+struct list isn't a null-terminated list, list_for_each() causes 'g' to be set
+to the list head at the end of the loop. Returning that as group caused random
+memory to be overwritten.
+
+Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+---
+ src/libinput.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/libinput.c b/src/libinput.c
+index f5c75b0..24f2b69 100644
+--- a/src/libinput.c
++++ b/src/libinput.c
+@@ -2011,7 +2011,7 @@ libinput_device_group_find_group(struct libinput *libinput,
+ 		}
+ 	}
+ 
+-	return g;
++	return NULL;
+ }
+ 
+ void
+-- 
+2.4.3
+
