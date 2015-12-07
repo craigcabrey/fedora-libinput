@@ -5,7 +5,7 @@
 
 Name:           libinput
 Version:        1.1.1
-Release:        1%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Release:        2%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 License:        MIT
@@ -20,6 +20,8 @@ Source0:        http://www.freedesktop.org/software/libinput/libinput-%{version}
 
 # Not upstream, keep until kernel 4.2 or 4.1.x with dbf3c37086 
 Patch01:        0001-touchpad-serial-synaptics-need-to-fake-new-touches-o.patch
+# https://bugzilla.redhat.com/show_bug.cgi?id=1247958
+Patch02:        0001-touchpad-reduced-the-2fg-scroll-threshold-to-1mm.patch
 
 BuildRequires:  git
 BuildRequires:  autoconf automake libtool pkgconfig
@@ -97,6 +99,9 @@ find $RPM_BUILD_ROOT -name '*.la' -delete
 
 
 %changelog
+* Mon Dec 07 2015 Peter Hutterer <peter.hutterer@redhat.com> 1.1.1-2
+- Reduce 2fg scroll threshold to 1mm (#1247958)
+
 * Mon Nov 16 2015 Peter Hutterer <peter.hutterer@redhat.com> 1.1.1-1
 - libinput 1.1.1
 

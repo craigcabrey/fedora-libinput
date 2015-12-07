@@ -1,0 +1,55 @@
+From 09a296708aa291e0dd5ada2db14f288a3095b61e Mon Sep 17 00:00:00 2001
+From: Peter Hutterer <peter.hutterer@who-t.net>
+Date: Mon, 9 Nov 2015 16:21:36 +1000
+Subject: [PATCH libinput] touchpad: reduced the 2fg scroll threshold to 1mm
+
+At least on the t440, this is enough to trigger correct detection between
+pinch and scroll 90% of the time. Since scrolling is significantly more
+prevalent than gesturing, erring on the side of scrolling at the cost of
+misdetecting some gestures is acceptable.
+
+Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+Reviewed-by: Hans de Goede <hdegoede@redhat.com>
+---
+ src/evdev-mt-touchpad-gestures.c | 2 +-
+ test/gestures.c                  | 8 ++++----
+ 2 files changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/src/evdev-mt-touchpad-gestures.c b/src/evdev-mt-touchpad-gestures.c
+index cc26e2a..80aa89f 100644
+--- a/src/evdev-mt-touchpad-gestures.c
++++ b/src/evdev-mt-touchpad-gestures.c
+@@ -195,7 +195,7 @@ tp_gesture_get_direction(struct tp_dispatch *tp, struct tp_touch *touch)
+ 	    (tp->device->model_flags & EVDEV_MODEL_ELANTECH_TOUCHPAD) == 0)
+ 		move_threshold = TP_MM_TO_DPI_NORMALIZED(4);
+ 	else
+-		move_threshold = TP_MM_TO_DPI_NORMALIZED(2);
++		move_threshold = TP_MM_TO_DPI_NORMALIZED(1);
+ 
+ 	delta = device_delta(touch->point, touch->gesture.initial);
+ 
+diff --git a/test/gestures.c b/test/gestures.c
+index 9e44724..9fc73b9 100644
+--- a/test/gestures.c
++++ b/test/gestures.c
+@@ -294,13 +294,13 @@ START_TEST(gestures_spread)
+ 	for (i = 0; i < 15; i++) {
+ 		litest_push_event_frame(dev);
+ 		if (dir_x > 0.0)
+-			dir_x += 2;
++			dir_x += 1;
+ 		else if (dir_x < 0.0)
+-			dir_x -= 2;
++			dir_x -= 1;
+ 		if (dir_y > 0.0)
+-			dir_y += 2;
++			dir_y += 1;
+ 		else if (dir_y < 0.0)
+-			dir_y -= 2;
++			dir_y -= 1;
+ 		litest_touch_move(dev,
+ 				  0,
+ 				  50 + dir_x,
+-- 
+2.5.0
+
