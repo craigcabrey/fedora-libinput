@@ -4,7 +4,7 @@
 %global gitversion 58abea394
 
 Name:           libinput
-Version:        1.1.2
+Version:        1.1.3
 Release:        1%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
@@ -97,6 +97,9 @@ find $RPM_BUILD_ROOT -name '*.la' -delete
 
 
 %changelog
+* Wed Dec 16 2015 Peter Hutterer <peter.hutterer@redhat.com> 1.1.3-1
+- libinput 1.1.3
+
 * Wed Dec 09 2015 Peter Hutterer <peter.hutterer@redhat.com> 1.1.2-1
 - libinput 1.1.2
 
