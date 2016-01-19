@@ -5,7 +5,7 @@
 
 Name:           libinput
 Version:        1.1.4
-Release:        2%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Release:        3%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 License:        MIT
@@ -22,6 +22,8 @@ Source0:        http://www.freedesktop.org/software/libinput/libinput-%{version}
 Patch01:        0001-touchpad-serial-synaptics-need-to-fake-new-touches-o.patch
 
 Patch02:        0001-touchpad-fix-DWT-pairing-for-Macbook-Pro-2015.patch
+Patch03:        0001-touchpad-disable-MT-for-elantech-semi-mt-touchpads.patch
+Patch04:        0001-touchpad-disable-MT-for-all-semi-mt-devices.patch
 
 BuildRequires:  git
 BuildRequires:  autoconf automake libtool pkgconfig
@@ -99,6 +101,10 @@ find $RPM_BUILD_ROOT -name '*.la' -delete
 
 
 %changelog
+* Tue Jan 19 2016 Peter Hutterer <peter.hutterer@redhat.com> 1.1.4-3
+- disable MT for semi-mt devices to solve the various two- and three-finger
+  issues (at the cost of pinch gestures) (#1295073)
+
 * Mon Jan 11 2016 Peter Hutterer <peter.hutterer@redhat.com> 1.1.4-2
 - fix disable-while-typing on macbooks
 
