@@ -1,0 +1,308 @@
+From 456a18ce5e318cc440ef61001b322f9ad90d1810 Mon Sep 17 00:00:00 2001
+From: Peter Hutterer <peter.hutterer@who-t.net>
+Date: Fri, 29 Jan 2016 10:09:13 +1000
+Subject: [PATCH libinput] evdev: disable the mode button on the Cyborg RAT 5
+
+This button sends a release N, press N+1 on each press, cycling through the
+three event codes supported. This causes a stuck button since the current mode
+is never released.
+
+Long-term this better served by a set of switches that toggle accordingly, for
+now disable the button codes.
+
+https://bugs.freedesktop.org/show_bug.cgi?id=92127
+
+Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+Reviewed-by: Hans de Goede <hdegoede@redhat.com>
+(cherry picked from commit e19d5d228cbda3ccd0fe1f11948032e12e1ed3c3)
+---
+ src/evdev.c                            | 36 +++++++++++++++++
+ src/evdev.h                            |  1 +
+ test/Makefile.am                       |  1 +
+ test/device.c                          | 33 ++++++++++++++++
+ test/litest-device-cyborg-rat-5.c      | 71 ++++++++++++++++++++++++++++++++++
+ test/litest.c                          |  2 +
+ test/litest.h                          |  1 +
+ udev/90-libinput-model-quirks.hwdb     |  7 ++++
+ udev/90-libinput-model-quirks.rules.in |  4 ++
+ 9 files changed, 156 insertions(+)
+ create mode 100644 test/litest-device-cyborg-rat-5.c
+
+diff --git a/src/evdev.c b/src/evdev.c
+index 430d7de..7448103 100644
+--- a/src/evdev.c
++++ b/src/evdev.c
+@@ -1663,6 +1663,7 @@ evdev_read_model_flags(struct evdev_device *device)
+		{ "LIBINPUT_MODEL_JUMPING_SEMI_MT", EVDEV_MODEL_JUMPING_SEMI_MT },
+		{ "LIBINPUT_MODEL_ELANTECH_TOUCHPAD", EVDEV_MODEL_ELANTECH_TOUCHPAD },
+		{ "LIBINPUT_MODEL_APPLE_INTERNAL_KEYBOARD", EVDEV_MODEL_APPLE_INTERNAL_KEYBOARD },
++		{ "LIBINPUT_MODEL_CYBORG_RAT", EVDEV_MODEL_CYBORG_RAT },
+		{ NULL, EVDEV_MODEL_DEFAULT },
+	};
+	const struct model_map *m = model_map;
+@@ -2215,6 +2216,39 @@ evdev_drain_fd(int fd)
+	}
+ }
+
++static inline void
++evdev_pre_configure_model_quirks(struct evdev_device *device)
++{
++	/* The Cyborg RAT has a mode button that cycles through event codes.
++	 * On press, we get a release for the current mode and a press for the
++	 * next mode:
++	 * E: 0.000001 0004 0004 589833	# EV_MSC / MSC_SCAN             589833
++	 * E: 0.000001 0001 0118 0000	# EV_KEY / (null)               0
++	 * E: 0.000001 0004 0004 589834	# EV_MSC / MSC_SCAN             589834
++	 * E: 0.000001 0001 0119 0001	# EV_KEY / (null)               1
++	 * E: 0.000001 0000 0000 0000	# ------------ SYN_REPORT (0) ---------- +0ms
++	 * E: 0.705000 0004 0004 589834	# EV_MSC / MSC_SCAN             589834
++	 * E: 0.705000 0001 0119 0000	# EV_KEY / (null)               0
++	 * E: 0.705000 0004 0004 589835	# EV_MSC / MSC_SCAN             589835
++	 * E: 0.705000 0001 011a 0001	# EV_KEY / (null)               1
++	 * E: 0.705000 0000 0000 0000	# ------------ SYN_REPORT (0) ---------- +705ms
++	 * E: 1.496995 0004 0004 589833	# EV_MSC / MSC_SCAN             589833
++	 * E: 1.496995 0001 0118 0001	# EV_KEY / (null)               1
++	 * E: 1.496995 0004 0004 589835	# EV_MSC / MSC_SCAN             589835
++	 * E: 1.496995 0001 011a 0000	# EV_KEY / (null)               0
++	 * E: 1.496995 0000 0000 0000	# ------------ SYN_REPORT (0) ---------- +791ms
++	 *
++	 * https://bugs.freedesktop.org/show_bug.cgi?id=92127
++	 *
++	 * Disable the event codes to avoid stuck buttons.
++	 */
++	if(device->model_flags & EVDEV_MODEL_CYBORG_RAT) {
++		libevdev_disable_event_code(device->evdev, EV_KEY, 0x118);
++		libevdev_disable_event_code(device->evdev, EV_KEY, 0x119);
++		libevdev_disable_event_code(device->evdev, EV_KEY, 0x11a);
++	}
++}
++
+ struct evdev_device *
+ evdev_device_create(struct libinput_seat *seat,
+		    struct udev_device *udev_device)
+@@ -2284,6 +2318,8 @@ evdev_device_create(struct libinput_seat *seat,
+	matrix_init_identity(&device->abs.usermatrix);
+	matrix_init_identity(&device->abs.default_calibration);
+
++	evdev_pre_configure_model_quirks(device);
++
+	if (evdev_configure_device(device) == -1)
+		goto err;
+
+diff --git a/src/evdev.h b/src/evdev.h
+index 97177ec..560559a 100644
+--- a/src/evdev.h
++++ b/src/evdev.h
+@@ -109,6 +109,7 @@ enum evdev_device_model {
+	EVDEV_MODEL_ELANTECH_TOUCHPAD = (1 << 11),
+	EVDEV_MODEL_LENOVO_X220_TOUCHPAD_FW81 = (1 << 12),
+	EVDEV_MODEL_APPLE_INTERNAL_KEYBOARD = (1 << 13),
++	EVDEV_MODEL_CYBORG_RAT = (1 << 14),
+ };
+
+ struct mt_slot {
+diff --git a/test/Makefile.am b/test/Makefile.am
+index 4c394bf..a298284 100644
+--- a/test/Makefile.am
++++ b/test/Makefile.am
+@@ -20,6 +20,7 @@ liblitest_la_SOURCES = \
+	litest-device-asus-rog-gladius.c \
+	litest-device-atmel-hover.c \
+	litest-device-bcm5974.c \
++	litest-device-cyborg-rat-5.c \
+	litest-device-elantech-touchpad.c \
+	litest-device-generic-singletouch.c \
+	litest-device-keyboard.c \
+diff --git a/test/device.c b/test/device.c
+index 03659ac..7bd7683 100644
+--- a/test/device.c
++++ b/test/device.c
+@@ -1283,6 +1283,38 @@ START_TEST(device_quirks_no_abs_mt_y)
+ }
+ END_TEST
+
++START_TEST(device_quirks_cyborg_rat_mode_button)
++{
++	struct litest_device *dev = litest_current_device();
++	struct libinput_device *device = dev->libinput_device;
++	struct libinput *li = dev->libinput;
++
++	ck_assert(!libinput_device_pointer_has_button(device, 0x118));
++	ck_assert(!libinput_device_pointer_has_button(device, 0x119));
++	ck_assert(!libinput_device_pointer_has_button(device, 0x11a));
++
++	litest_drain_events(li);
++
++	litest_event(dev, EV_KEY, 0x118, 0);
++	litest_event(dev, EV_KEY, 0x119, 1);
++	litest_event(dev, EV_SYN, SYN_REPORT, 0);
++
++	litest_assert_empty_queue(li);
++
++	litest_event(dev, EV_KEY, 0x119, 0);
++	litest_event(dev, EV_KEY, 0x11a, 1);
++	litest_event(dev, EV_SYN, SYN_REPORT, 0);
++
++	litest_assert_empty_queue(li);
++
++	litest_event(dev, EV_KEY, 0x11a, 0);
++	litest_event(dev, EV_KEY, 0x118, 1);
++	litest_event(dev, EV_SYN, SYN_REPORT, 0);
++
++	litest_assert_empty_queue(li);
++}
++END_TEST
++
+ void
+ litest_setup_tests(void)
+ {
+@@ -1339,4 +1371,5 @@ litest_setup_tests(void)
+	litest_add_no_device("device:invalid rel events", device_abs_rel);
+
+	litest_add_for_device("device:quirks", device_quirks_no_abs_mt_y, LITEST_ANKER_MOUSE_KBD);
++	litest_add_for_device("device:quirks", device_quirks_cyborg_rat_mode_button, LITEST_CYBORG_RAT);
+ }
+diff --git a/test/litest-device-cyborg-rat-5.c b/test/litest-device-cyborg-rat-5.c
+new file mode 100644
+index 0000000..a1db77a
+--- /dev/null
++++ b/test/litest-device-cyborg-rat-5.c
+@@ -0,0 +1,71 @@
++/*
++ * Copyright © 2013 Red Hat, Inc.
++ *
++ * Permission is hereby granted, free of charge, to any person obtaining a
++ * copy of this software and associated documentation files (the "Software"),
++ * to deal in the Software without restriction, including without limitation
++ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
++ * and/or sell copies of the Software, and to permit persons to whom the
++ * Software is furnished to do so, subject to the following conditions:
++ *
++ * The above copyright notice and this permission notice (including the next
++ * paragraph) shall be included in all copies or substantial portions of the
++ * Software.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
++ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
++ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
++ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
++ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
++ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
++ * DEALINGS IN THE SOFTWARE.
++ */
++
++#if HAVE_CONFIG_H
++#include "config.h"
++#endif
++
++#include "litest.h"
++#include "litest-int.h"
++
++static void litest_cyborg_rat_setup(void)
++{
++	struct litest_device *d = litest_create_device(LITEST_CYBORG_RAT);
++	litest_set_current_device(d);
++}
++
++static struct input_id input_id = {
++	.bustype = 0x3,
++	.vendor = 0x6a3,
++	.product = 0xcd5,
++};
++
++static int events[] = {
++	EV_KEY, BTN_LEFT,
++	EV_KEY, BTN_RIGHT,
++	EV_KEY, BTN_MIDDLE,
++	EV_KEY, BTN_SIDE,
++	EV_KEY, BTN_EXTRA,
++	EV_KEY, BTN_FORWARD,
++	EV_KEY, BTN_TASK,
++	EV_KEY, 0x118,
++	EV_KEY, 0x119,
++	EV_KEY, 0x11a,
++	EV_REL, REL_X,
++	EV_REL, REL_Y,
++	EV_REL, REL_WHEEL,
++	-1 , -1,
++};
++
++struct litest_test_device litest_cyborg_rat_device = {
++	.type = LITEST_CYBORG_RAT,
++	.features = LITEST_RELATIVE | LITEST_BUTTON | LITEST_WHEEL,
++	.shortname = "cyborg_rat",
++	.setup = litest_cyborg_rat_setup,
++	.interface = NULL,
++
++	.name = "Saitek Cyborg R.A.T.5 Mouse",
++	.id = &input_id,
++	.absinfo = NULL,
++	.events = events,
++};
+diff --git a/test/litest.c b/test/litest.c
+index 1551dc7..2cc1a61 100644
+--- a/test/litest.c
++++ b/test/litest.c
+@@ -369,6 +369,7 @@ extern struct litest_test_device litest_mouse_gladius_device;
+ extern struct litest_test_device litest_mouse_wheel_click_angle_device;
+ extern struct litest_test_device litest_apple_keyboard_device;
+ extern struct litest_test_device litest_anker_mouse_kbd_device;
++extern struct litest_test_device litest_cyborg_rat_device;
+
+ struct litest_test_device* devices[] = {
+	&litest_synaptics_clickpad_device,
+@@ -404,6 +405,7 @@ struct litest_test_device* devices[] = {
+	&litest_mouse_wheel_click_angle_device,
+	&litest_apple_keyboard_device,
+	&litest_anker_mouse_kbd_device,
++	&litest_cyborg_rat_device,
+	NULL,
+ };
+
+diff --git a/test/litest.h b/test/litest.h
+index 61b1b01..4235d2c 100644
+--- a/test/litest.h
++++ b/test/litest.h
+@@ -146,6 +146,7 @@ enum litest_device_type {
+	LITEST_MOUSE_WHEEL_CLICK_ANGLE = -32,
+	LITEST_APPLE_KEYBOARD = -33,
+	LITEST_ANKER_MOUSE_KBD = -34,
++	LITEST_CYBORG_RAT = -41,
+ };
+
+ enum litest_device_feature {
+diff --git a/udev/90-libinput-model-quirks.hwdb b/udev/90-libinput-model-quirks.hwdb
+index baebcb3..fa668d6 100644
+--- a/udev/90-libinput-model-quirks.hwdb
++++ b/udev/90-libinput-model-quirks.hwdb
+@@ -38,6 +38,13 @@ libinput:name:*Apple Inc. Apple Internal Keyboard*:dmi:*
+  LIBINPUT_MODEL_APPLE_INTERNAL_KEYBOARD=1
+
+ ##########################################
++# Cyborg
++##########################################
++# Saitek Cyborg R.A.T.5 Mouse
++libinput:mouse:input:b0003v06A3p0CD5*
++ LIBINPUT_MODEL_CYBORG_RAT=1
++
++##########################################
+ # Elantech
+ ##########################################
+ libinput:name:*ETPS/2 Elantech Touchpad*:dmi:*
+diff --git a/udev/90-libinput-model-quirks.rules.in b/udev/90-libinput-model-quirks.rules.in
+index 5b07726..8bff192 100644
+--- a/udev/90-libinput-model-quirks.rules.in
++++ b/udev/90-libinput-model-quirks.rules.in
+@@ -29,6 +29,10 @@ KERNELS=="*input*", \
+ ENV{ID_INPUT_TOUCHPAD}=="1", \
+   IMPORT{builtin}="hwdb --subsystem=input --lookup-prefix=libinput:touchpad:"
+
++# libinput:mouse:<modalias>
++ENV{ID_INPUT_MOUSE}=="1", \
++  IMPORT{builtin}="hwdb --subsystem=input --lookup-prefix=libinput:mouse:"
++
+ # libinput:name:<name>:dmi:<dmi string>
+ KERNELS=="input*", \
+   IMPORT{builtin}="hwdb 'libinput:name:$attr{name}:$attr{[dmi/id]modalias}'"
+--
+2.5.0
