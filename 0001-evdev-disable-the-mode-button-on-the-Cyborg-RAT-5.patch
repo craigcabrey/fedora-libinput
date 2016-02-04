@@ -33,17 +33,17 @@ index 430d7de..7448103 100644
 --- a/src/evdev.c
 +++ b/src/evdev.c
 @@ -1663,6 +1663,7 @@ evdev_read_model_flags(struct evdev_device *device)
-		{ "LIBINPUT_MODEL_JUMPING_SEMI_MT", EVDEV_MODEL_JUMPING_SEMI_MT },
-		{ "LIBINPUT_MODEL_ELANTECH_TOUCHPAD", EVDEV_MODEL_ELANTECH_TOUCHPAD },
-		{ "LIBINPUT_MODEL_APPLE_INTERNAL_KEYBOARD", EVDEV_MODEL_APPLE_INTERNAL_KEYBOARD },
+ 		{ "LIBINPUT_MODEL_JUMPING_SEMI_MT", EVDEV_MODEL_JUMPING_SEMI_MT },
+ 		{ "LIBINPUT_MODEL_ELANTECH_TOUCHPAD", EVDEV_MODEL_ELANTECH_TOUCHPAD },
+ 		{ "LIBINPUT_MODEL_APPLE_INTERNAL_KEYBOARD", EVDEV_MODEL_APPLE_INTERNAL_KEYBOARD },
 +		{ "LIBINPUT_MODEL_CYBORG_RAT", EVDEV_MODEL_CYBORG_RAT },
-		{ NULL, EVDEV_MODEL_DEFAULT },
-	};
-	const struct model_map *m = model_map;
+ 		{ NULL, EVDEV_MODEL_DEFAULT },
+ 	};
+ 	const struct model_map *m = model_map;
 @@ -2215,6 +2216,39 @@ evdev_drain_fd(int fd)
-	}
+ 	}
  }
-
+ 
 +static inline void
 +evdev_pre_configure_model_quirks(struct evdev_device *device)
 +{
@@ -79,40 +79,40 @@ index 430d7de..7448103 100644
 +
  struct evdev_device *
  evdev_device_create(struct libinput_seat *seat,
-		    struct udev_device *udev_device)
+ 		    struct udev_device *udev_device)
 @@ -2284,6 +2318,8 @@ evdev_device_create(struct libinput_seat *seat,
-	matrix_init_identity(&device->abs.usermatrix);
-	matrix_init_identity(&device->abs.default_calibration);
-
+ 	matrix_init_identity(&device->abs.usermatrix);
+ 	matrix_init_identity(&device->abs.default_calibration);
+ 
 +	evdev_pre_configure_model_quirks(device);
 +
-	if (evdev_configure_device(device) == -1)
-		goto err;
-
+ 	if (evdev_configure_device(device) == -1)
+ 		goto err;
+ 
 diff --git a/src/evdev.h b/src/evdev.h
 index 97177ec..560559a 100644
 --- a/src/evdev.h
 +++ b/src/evdev.h
 @@ -109,6 +109,7 @@ enum evdev_device_model {
-	EVDEV_MODEL_ELANTECH_TOUCHPAD = (1 << 11),
-	EVDEV_MODEL_LENOVO_X220_TOUCHPAD_FW81 = (1 << 12),
-	EVDEV_MODEL_APPLE_INTERNAL_KEYBOARD = (1 << 13),
+ 	EVDEV_MODEL_ELANTECH_TOUCHPAD = (1 << 11),
+ 	EVDEV_MODEL_LENOVO_X220_TOUCHPAD_FW81 = (1 << 12),
+ 	EVDEV_MODEL_APPLE_INTERNAL_KEYBOARD = (1 << 13),
 +	EVDEV_MODEL_CYBORG_RAT = (1 << 14),
  };
-
+ 
  struct mt_slot {
 diff --git a/test/Makefile.am b/test/Makefile.am
 index 4c394bf..a298284 100644
 --- a/test/Makefile.am
 +++ b/test/Makefile.am
 @@ -20,6 +20,7 @@ liblitest_la_SOURCES = \
-	litest-device-asus-rog-gladius.c \
-	litest-device-atmel-hover.c \
-	litest-device-bcm5974.c \
+ 	litest-device-asus-rog-gladius.c \
+ 	litest-device-atmel-hover.c \
+ 	litest-device-bcm5974.c \
 +	litest-device-cyborg-rat-5.c \
-	litest-device-elantech-touchpad.c \
-	litest-device-generic-singletouch.c \
-	litest-device-keyboard.c \
+ 	litest-device-elantech-touchpad.c \
+ 	litest-device-generic-singletouch.c \
+ 	litest-device-keyboard.c \
 diff --git a/test/device.c b/test/device.c
 index 03659ac..7bd7683 100644
 --- a/test/device.c
@@ -120,7 +120,7 @@ index 03659ac..7bd7683 100644
 @@ -1283,6 +1283,38 @@ START_TEST(device_quirks_no_abs_mt_y)
  }
  END_TEST
-
+ 
 +START_TEST(device_quirks_cyborg_rat_mode_button)
 +{
 +	struct litest_device *dev = litest_current_device();
@@ -157,9 +157,9 @@ index 03659ac..7bd7683 100644
  litest_setup_tests(void)
  {
 @@ -1339,4 +1371,5 @@ litest_setup_tests(void)
-	litest_add_no_device("device:invalid rel events", device_abs_rel);
-
-	litest_add_for_device("device:quirks", device_quirks_no_abs_mt_y, LITEST_ANKER_MOUSE_KBD);
+ 	litest_add_no_device("device:invalid rel events", device_abs_rel);
+ 
+ 	litest_add_for_device("device:quirks", device_quirks_no_abs_mt_y, LITEST_ANKER_MOUSE_KBD);
 +	litest_add_for_device("device:quirks", device_quirks_cyborg_rat_mode_button, LITEST_CYBORG_RAT);
  }
 diff --git a/test/litest-device-cyborg-rat-5.c b/test/litest-device-cyborg-rat-5.c
@@ -248,28 +248,28 @@ index 1551dc7..2cc1a61 100644
  extern struct litest_test_device litest_apple_keyboard_device;
  extern struct litest_test_device litest_anker_mouse_kbd_device;
 +extern struct litest_test_device litest_cyborg_rat_device;
-
+ 
  struct litest_test_device* devices[] = {
-	&litest_synaptics_clickpad_device,
+ 	&litest_synaptics_clickpad_device,
 @@ -404,6 +405,7 @@ struct litest_test_device* devices[] = {
-	&litest_mouse_wheel_click_angle_device,
-	&litest_apple_keyboard_device,
-	&litest_anker_mouse_kbd_device,
+ 	&litest_mouse_wheel_click_angle_device,
+ 	&litest_apple_keyboard_device,
+ 	&litest_anker_mouse_kbd_device,
 +	&litest_cyborg_rat_device,
-	NULL,
+ 	NULL,
  };
-
+ 
 diff --git a/test/litest.h b/test/litest.h
 index 61b1b01..4235d2c 100644
 --- a/test/litest.h
 +++ b/test/litest.h
 @@ -146,6 +146,7 @@ enum litest_device_type {
-	LITEST_MOUSE_WHEEL_CLICK_ANGLE = -32,
-	LITEST_APPLE_KEYBOARD = -33,
-	LITEST_ANKER_MOUSE_KBD = -34,
+ 	LITEST_MOUSE_WHEEL_CLICK_ANGLE = -32,
+ 	LITEST_APPLE_KEYBOARD = -33,
+ 	LITEST_ANKER_MOUSE_KBD = -34,
 +	LITEST_CYBORG_RAT = -41,
  };
-
+ 
  enum litest_device_feature {
 diff --git a/udev/90-libinput-model-quirks.hwdb b/udev/90-libinput-model-quirks.hwdb
 index baebcb3..fa668d6 100644
@@ -277,7 +277,7 @@ index baebcb3..fa668d6 100644
 +++ b/udev/90-libinput-model-quirks.hwdb
 @@ -38,6 +38,13 @@ libinput:name:*Apple Inc. Apple Internal Keyboard*:dmi:*
   LIBINPUT_MODEL_APPLE_INTERNAL_KEYBOARD=1
-
+ 
  ##########################################
 +# Cyborg
 +##########################################
@@ -296,7 +296,7 @@ index 5b07726..8bff192 100644
 @@ -29,6 +29,10 @@ KERNELS=="*input*", \
  ENV{ID_INPUT_TOUCHPAD}=="1", \
    IMPORT{builtin}="hwdb --subsystem=input --lookup-prefix=libinput:touchpad:"
-
+ 
 +# libinput:mouse:<modalias>
 +ENV{ID_INPUT_MOUSE}=="1", \
 +  IMPORT{builtin}="hwdb --subsystem=input --lookup-prefix=libinput:mouse:"
@@ -304,5 +304,6 @@ index 5b07726..8bff192 100644
  # libinput:name:<name>:dmi:<dmi string>
  KERNELS=="input*", \
    IMPORT{builtin}="hwdb 'libinput:name:$attr{name}:$attr{[dmi/id]modalias}'"
---
+-- 
 2.5.0
+

@@ -5,7 +5,7 @@
 
 Name:           libinput
 Version:        1.1.5
-Release:        3%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Release:        4%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 License:        MIT
@@ -100,6 +100,9 @@ find $RPM_BUILD_ROOT -name '*.la' -delete
 
 
 %changelog
+* Thu Feb 04 2016 Peter Hutterer <peter.hutterer@redhat.com> 1.1.5-4
+- Fix patches from -3, they got corrupted somehow
+
 * Thu Feb 04 2016 Peter Hutterer <peter.hutterer@redhat.com> 1.1.5-3
 - Disable the mode button on the Cyborg RAT 5
 - Drop touchpad motion hysteresis by default

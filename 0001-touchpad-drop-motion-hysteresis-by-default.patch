@@ -1,4 +1,4 @@
-From 6e0553ab5553d63fa737c1739cfa86fbeee9f641 Mon Sep 17 00:00:00 2001
+From c6381801cf4dcc29ac13b6f52938f9e4a5f0b219 Mon Sep 17 00:00:00 2001
 From: Peter Hutterer <peter.hutterer@who-t.net>
 Date: Fri, 29 Jan 2016 16:25:31 +1000
 Subject: [PATCH libinput] touchpad: drop motion hysteresis by default
@@ -19,6 +19,7 @@ https://bugs.freedesktop.org/show_bug.cgi?id=93503
 
 Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
 Reviewed-by: Hans de Goede <hdegoede@redhat.com>
+(cherry picked from commit 6e0553ab5553d63fa737c1739cfa86fbeee9f641)
 ---
  src/evdev-mt-touchpad.c            | 23 ++++++++++++++++++-----
  src/evdev.c                        |  1 +
@@ -27,13 +28,13 @@ Reviewed-by: Hans de Goede <hdegoede@redhat.com>
  4 files changed, 23 insertions(+), 5 deletions(-)
 
 diff --git a/src/evdev-mt-touchpad.c b/src/evdev-mt-touchpad.c
-index f249116..0f72807 100644
+index db8aa1d..23b7419 100644
 --- a/src/evdev-mt-touchpad.c
 +++ b/src/evdev-mt-touchpad.c
-@@ -1951,13 +1951,29 @@ tp_init_default_resolution(struct tp_dispatch *tp,
-	return 0;
+@@ -1940,13 +1940,29 @@ tp_init_default_resolution(struct tp_dispatch *tp,
+ 	return 0;
  }
-
+ 
 +static inline void
 +tp_init_hysteresis(struct tp_dispatch *tp)
 +{
@@ -53,56 +54,56 @@ index f249116..0f72807 100644
 +
  static int
  tp_init(struct tp_dispatch *tp,
-	struct evdev_device *device)
+ 	struct evdev_device *device)
  {
-	int width, height;
-	double diagonal;
+ 	int width, height;
+ 	double diagonal;
 -	int res_x, res_y;
-
-	tp->base.interface = &tp_interface;
-	tp->device = device;
-@@ -1971,8 +1987,6 @@ tp_init(struct tp_dispatch *tp,
-	if (tp_init_slots(tp, device) != 0)
-		return -1;
-
+ 
+ 	tp->base.interface = &tp_interface;
+ 	tp->device = device;
+@@ -1960,8 +1976,6 @@ tp_init(struct tp_dispatch *tp,
+ 	if (tp_init_slots(tp, device) != 0)
+ 		return -1;
+ 
 -	res_x = tp->device->abs.absinfo_x->resolution;
 -	res_y = tp->device->abs.absinfo_y->resolution;
-	width = device->abs.dimensions.x;
-	height = device->abs.dimensions.y;
-	diagonal = sqrt(width*width + height*height);
-@@ -1981,8 +1995,7 @@ tp_init(struct tp_dispatch *tp,
-						       EV_ABS,
-						       ABS_MT_DISTANCE);
-
+ 	width = device->abs.dimensions.x;
+ 	height = device->abs.dimensions.y;
+ 	diagonal = sqrt(width*width + height*height);
+@@ -1970,8 +1984,7 @@ tp_init(struct tp_dispatch *tp,
+ 						       EV_ABS,
+ 						       ABS_MT_DISTANCE);
+ 
 -	tp->hysteresis_margin.x = res_x/2;
 -	tp->hysteresis_margin.y = res_y/2;
 +	tp_init_hysteresis(tp);
-
-	if (tp_init_accel(tp, diagonal) != 0)
-		return -1;
+ 
+ 	if (tp_init_accel(tp, diagonal) != 0)
+ 		return -1;
 diff --git a/src/evdev.c b/src/evdev.c
-index 66673a8..473ff63 100644
+index 7448103..281a2a0 100644
 --- a/src/evdev.c
 +++ b/src/evdev.c
-@@ -1678,6 +1678,7 @@ evdev_read_model_flags(struct evdev_device *device)
-		{ "LIBINPUT_MODEL_ELANTECH_TOUCHPAD", EVDEV_MODEL_ELANTECH_TOUCHPAD },
-		{ "LIBINPUT_MODEL_APPLE_INTERNAL_KEYBOARD", EVDEV_MODEL_APPLE_INTERNAL_KEYBOARD },
-		{ "LIBINPUT_MODEL_CYBORG_RAT", EVDEV_MODEL_CYBORG_RAT },
+@@ -1664,6 +1664,7 @@ evdev_read_model_flags(struct evdev_device *device)
+ 		{ "LIBINPUT_MODEL_ELANTECH_TOUCHPAD", EVDEV_MODEL_ELANTECH_TOUCHPAD },
+ 		{ "LIBINPUT_MODEL_APPLE_INTERNAL_KEYBOARD", EVDEV_MODEL_APPLE_INTERNAL_KEYBOARD },
+ 		{ "LIBINPUT_MODEL_CYBORG_RAT", EVDEV_MODEL_CYBORG_RAT },
 +		{ "LIBINPUT_MODEL_CYAPA", EVDEV_MODEL_CYAPA },
-		{ NULL, EVDEV_MODEL_DEFAULT },
-	};
-	const struct model_map *m = model_map;
+ 		{ NULL, EVDEV_MODEL_DEFAULT },
+ 	};
+ 	const struct model_map *m = model_map;
 diff --git a/src/evdev.h b/src/evdev.h
-index 8b567a8..b164af8 100644
+index 560559a..96bf621 100644
 --- a/src/evdev.h
 +++ b/src/evdev.h
-@@ -111,6 +111,7 @@ enum evdev_device_model {
-	EVDEV_MODEL_LENOVO_X220_TOUCHPAD_FW81 = (1 << 12),
-	EVDEV_MODEL_APPLE_INTERNAL_KEYBOARD = (1 << 13),
-	EVDEV_MODEL_CYBORG_RAT = (1 << 14),
+@@ -110,6 +110,7 @@ enum evdev_device_model {
+ 	EVDEV_MODEL_LENOVO_X220_TOUCHPAD_FW81 = (1 << 12),
+ 	EVDEV_MODEL_APPLE_INTERNAL_KEYBOARD = (1 << 13),
+ 	EVDEV_MODEL_CYBORG_RAT = (1 << 14),
 +	EVDEV_MODEL_CYAPA = (1 << 15),
  };
-
+ 
  struct mt_slot {
 diff --git a/udev/90-libinput-model-quirks.hwdb b/udev/90-libinput-model-quirks.hwdb
 index fa668d6..f23a7f9 100644
@@ -111,12 +112,13 @@ index fa668d6..f23a7f9 100644
 @@ -73,6 +73,9 @@ libinput:name:Cypress APA Trackpad (cyapa):dmi:*svn*SAMSUNG*:pn*Lumpy*
  libinput:name:Atmel maXTouch Touchpad:dmi:*svn*GOOGLE*:pn*Samus*
   LIBINPUT_MODEL_CHROMEBOOK=1
-
+ 
 +libinput:name:Cypress APA Trackpad (cyapa):dmi:*
 + LIBINPUT_MODEL_CYAPA=1
 +
  ##########################################
  # LENOVO
  ##########################################
---
+-- 
 2.5.0
+
