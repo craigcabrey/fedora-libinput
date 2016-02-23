@@ -4,8 +4,8 @@
 %global gitversion 58abea394
 
 Name:           libinput
-Version:        1.1.902
-Release:        2%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Version:        1.2.0
+Release:        1%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 License:        MIT
@@ -97,6 +97,9 @@ find $RPM_BUILD_ROOT -name '*.la' -delete
 
 
 %changelog
+* Tue Feb 23 2016 Peter Hutterer <peter.hutterer@redhat.com> 1.2.0-1
+- libinput 1.2.0
+
 * Mon Feb 15 2016 Peter Hutterer <peter.hutterer@redhat.com> 1.1.902-2
 - Add libwacom-devel to BuildRequires
 
