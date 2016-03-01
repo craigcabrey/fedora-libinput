@@ -5,7 +5,7 @@
 
 Name:           libinput
 Version:        1.2.1
-Release:        1%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Release:        2%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 License:        MIT
@@ -97,6 +97,9 @@ find $RPM_BUILD_ROOT -name '*.la' -delete
 
 
 %changelog
+* Wed Mar 02 2016 Peter Hutterer <peter.hutterer@redhat.com> 1.2.1-2
+- Bump to maintain upgrade path with F23
+
 * Mon Feb 29 2016 Peter Hutterer <peter.hutterer@redhat.com> 1.2.1-1
 - libinput 1.2.1
 
