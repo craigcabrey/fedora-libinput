@@ -5,7 +5,7 @@
 
 Name:           libinput
 Version:        1.2.1
-Release:        2%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Release:        3%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 License:        MIT
@@ -20,6 +20,9 @@ Source0:        http://www.freedesktop.org/software/libinput/libinput-%{version}
 
 # Not upstream, keep until kernel 4.2 or 4.1.x with dbf3c37086 
 Patch01:        0001-touchpad-serial-synaptics-need-to-fake-new-touches-o.patch
+
+# https://bugzilla.redhat.com/show_bug.cgi?id=1314955
+Patch02:        0001-tablet-reject-mislabelled-tablet-devices.patch
 
 BuildRequires:  git
 BuildRequires:  autoconf automake libtool pkgconfig
@@ -97,6 +100,9 @@ find $RPM_BUILD_ROOT -name '*.la' -delete
 
 
 %changelog
+* Mon Mar 07 2016 Peter Hutterer <peter.hutterer@redhat.com> 1.2.1-3
+- Fix segfault on mislabeled tablets (#1314955)
+
 * Wed Mar 02 2016 Peter Hutterer <peter.hutterer@redhat.com> 1.2.1-2
 - Bump to maintain upgrade path with F23
 

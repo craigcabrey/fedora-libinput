@@ -1,0 +1,66 @@
+From 821ac1f9d5ea1267ea125c67e7652c8cc14e9cb3 Mon Sep 17 00:00:00 2001
+From: Peter Hutterer <peter.hutterer@who-t.net>
+Date: Mon, 7 Mar 2016 10:12:13 +1000
+Subject: [PATCH libinput] tablet: reject mislabelled tablet devices
+
+The HUION 580 has a "consumer control" event node that has an ABS_VOLUME, keys
+and a REL_HWHEEL. It has the same VID/PID as the pen tablet and libwacom
+labels it as ID_INPUT_TABLET. This causes a crash later when we try to init
+pointer acceleration for a device that doesn't have axes.
+
+https://bugzilla.redhat.com/show_bug.cgi?id=1314955
+
+Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+---
+ src/evdev-tablet.c | 28 ++++++++++++++++++++++++++++
+ 1 file changed, 28 insertions(+)
+
+diff --git a/src/evdev-tablet.c b/src/evdev-tablet.c
+index 0f6fa2c..9fc38aa 100644
+--- a/src/evdev-tablet.c
++++ b/src/evdev-tablet.c
+@@ -1613,6 +1613,31 @@ tablet_init_left_handed(struct evdev_device *device)
+ }
+ 
+ static int
++tablet_reject_device(struct evdev_device *device)
++{
++	struct libevdev *evdev = device->evdev;
++	int rc = -1;
++
++	if (!libevdev_has_event_code(evdev, EV_ABS, ABS_X) ||
++	    !libevdev_has_event_code(evdev, EV_ABS, ABS_Y))
++		goto out;
++
++	if (!libevdev_has_event_code(evdev, EV_KEY, BTN_TOOL_PEN))
++		goto out;
++
++	rc = 0;
++
++out:
++	if (rc) {
++		log_bug_libinput(device->base.seat->libinput,
++				 "Device '%s' does not meet tablet criteria. "
++				 "Ignoring this device.\n",
++				 device->devname, device->devname);
++	}
++	return rc;
++}
++
++static int
+ tablet_init(struct tablet_dispatch *tablet,
+ 	    struct evdev_device *device)
+ {
+@@ -1625,6 +1650,9 @@ tablet_init(struct tablet_dispatch *tablet,
+ 	tablet->current_tool_type = LIBINPUT_TOOL_NONE;
+ 	list_init(&tablet->tool_list);
+ 
++	if (tablet_reject_device(device))
++		return -1;
++
+ 	tablet_init_calibration(tablet, device);
+ 	tablet_init_proximity_threshold(tablet, device);
+ 	rc = tablet_init_accel(tablet, device);
+-- 
+2.5.0
+
