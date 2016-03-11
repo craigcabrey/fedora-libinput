@@ -1,0 +1,170 @@
+From a608d9dc2c70c7915fc94466ed27c1684f65409e Mon Sep 17 00:00:00 2001
+From: Peter Hutterer <peter.hutterer@who-t.net>
+Date: Mon, 7 Mar 2016 16:05:25 +1000
+Subject: [PATCH libinput] touchpad: add quirk for the T450 and T460 generation
+ hardware
+
+The touchpad's sensors are too far apart (or the firmware interferes), causing
+in a jerky movement visible especially on slow motion. We get a bunch of
+normal motion events, then only ABS_MT_PRESSURE updates without x/y updates.
+After about one mm of movement x/y updates resume, with the first event
+covering the distance between the last motion event. That event is usually
+accelerated and thus causes a large jump. Subsequent events are sufficiently
+fine-grained again.
+
+This patch counts the number of non-motion events. Once we hit 10 in a row, we
+mark the first motion update as non-dirty, effectively discarding the motion
+and thus stopping the pointer jumps.
+
+https://bugs.freedesktop.org/show_bug.cgi?id=94379
+
+Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+Tested-by: Benjamin Tissoires <benjamin.tissoires@gmail.com>
+---
+ src/evdev-mt-touchpad.c            | 32 ++++++++++++++++++++++++++++----
+ src/evdev-mt-touchpad.h            | 12 ++++++++++++
+ src/evdev.c                        |  1 +
+ src/evdev.h                        |  1 +
+ udev/90-libinput-model-quirks.hwdb |  7 +++++++
+ 5 files changed, 49 insertions(+), 4 deletions(-)
+
+diff --git a/src/evdev-mt-touchpad.c b/src/evdev-mt-touchpad.c
+index 00d6539..d0a8e27 100644
+--- a/src/evdev-mt-touchpad.c
++++ b/src/evdev-mt-touchpad.c
+@@ -337,7 +337,7 @@ tp_process_absolute(struct tp_dispatch *tp,
+ 	case ABS_MT_PRESSURE:
+ 		t->pressure = e->value;
+ 		t->dirty = true;
+-		tp->queued |= TOUCHPAD_EVENT_MOTION;
++		tp->queued |= TOUCHPAD_EVENT_OTHERAXIS;
+ 		break;
+ 	}
+ }
+@@ -880,8 +880,10 @@ tp_position_fake_touches(struct tp_dispatch *tp)
+ }
+ 
+ static inline bool
+-tp_need_motion_history_reset(struct tp_dispatch *tp)
++tp_need_motion_history_reset(struct tp_dispatch *tp, uint64_t time)
+ {
++	bool rc = false;
++
+ 	/* semi-mt finger postions may "jump" when nfingers changes */
+ 	if (tp->semi_mt && tp->nfingers_down != tp->old_nfingers_down)
+ 		return true;
+@@ -894,7 +896,29 @@ tp_need_motion_history_reset(struct tp_dispatch *tp)
+ 		 tp->old_nfingers_down > tp->num_slots))
+ 		return true;
+ 
+-	return false;
++	/* Quirk: if we had multiple events without x/y axis
++	   information, the next x/y event is going to be a jump. So we
++	   reset that touch to non-dirty effectively swallowing that event
++	   and restarting with the next event again.
++	 */
++	if (tp->device->model_flags & EVDEV_MODEL_LENOVO_T450_TOUCHPAD) {
++		if (tp->queued & TOUCHPAD_EVENT_MOTION) {
++			if (tp->quirks.nonmotion_event_count > 10) {
++				struct tp_touch *t;
++
++				tp_for_each_touch(tp, t)
++				t->dirty = false;
++				rc = true;
++			}
++			tp->quirks.nonmotion_event_count = 0;
++		}
++
++		if ((tp->queued & (TOUCHPAD_EVENT_OTHERAXIS|TOUCHPAD_EVENT_MOTION)) ==
++		    TOUCHPAD_EVENT_OTHERAXIS)
++			tp->quirks.nonmotion_event_count++;
++	}
++
++	return rc;
+ }
+ 
+ static void
+@@ -909,7 +933,7 @@ tp_process_state(struct tp_dispatch *tp, uint64_t time)
+ 	tp_unhover_touches(tp, time);
+ 	tp_position_fake_touches(tp);
+ 
+-	want_motion_reset = tp_need_motion_history_reset(tp);
++	want_motion_reset = tp_need_motion_history_reset(tp, time);
+ 
+ 	for (i = 0; i < tp->ntouches; i++) {
+ 		t = tp_get_touch(tp, i);
+diff --git a/src/evdev-mt-touchpad.h b/src/evdev-mt-touchpad.h
+index eae327b..1f05a03 100644
+--- a/src/evdev-mt-touchpad.h
++++ b/src/evdev-mt-touchpad.h
+@@ -41,6 +41,7 @@ enum touchpad_event {
+ 	TOUCHPAD_EVENT_MOTION		= (1 << 0),
+ 	TOUCHPAD_EVENT_BUTTON_PRESS	= (1 << 1),
+ 	TOUCHPAD_EVENT_BUTTON_RELEASE	= (1 << 2),
++	TOUCHPAD_EVENT_OTHERAXIS	= (1 << 3),
+ };
+ 
+ enum touchpad_model {
+@@ -353,6 +354,17 @@ struct tp_dispatch {
+ 		int upper_thumb_line;
+ 		int lower_thumb_line;
+ 	} thumb;
++
++	struct {
++		/* A quirk used on the T450 series Synaptics hardware.
++		 * Slowly moving the finger causes multiple events with only
++		 * ABS_MT_PRESSURE but no x/y information. When the x/y
++		 * event comes, it will be a jump of ~20 units. We use the
++		 * below to count non-motion events to discard that first
++		 * event with the jump.
++		 */
++		unsigned int nonmotion_event_count;
++	} quirks;
+ };
+ 
+ #define tp_for_each_touch(_tp, _t) \
+diff --git a/src/evdev.c b/src/evdev.c
+index 51768fe..a5c965d 100644
+--- a/src/evdev.c
++++ b/src/evdev.c
+@@ -1680,6 +1680,7 @@ evdev_read_model_flags(struct evdev_device *device)
+ 		{ "LIBINPUT_MODEL_CYBORG_RAT", EVDEV_MODEL_CYBORG_RAT },
+ 		{ "LIBINPUT_MODEL_CYAPA", EVDEV_MODEL_CYAPA },
+ 		{ "LIBINPUT_MODEL_ALPS_RUSHMORE", EVDEV_MODEL_ALPS_RUSHMORE },
++		{ "LIBINPUT_MODEL_LENOVO_T450_TOUCHPAD", EVDEV_MODEL_LENOVO_T450_TOUCHPAD },
+ 		{ NULL, EVDEV_MODEL_DEFAULT },
+ 	};
+ 	const struct model_map *m = model_map;
+diff --git a/src/evdev.h b/src/evdev.h
+index 482712b..4a5d807 100644
+--- a/src/evdev.h
++++ b/src/evdev.h
+@@ -113,6 +113,7 @@ enum evdev_device_model {
+ 	EVDEV_MODEL_CYBORG_RAT = (1 << 14),
+ 	EVDEV_MODEL_CYAPA = (1 << 15),
+ 	EVDEV_MODEL_ALPS_RUSHMORE = (1 << 16),
++	EVDEV_MODEL_LENOVO_T450_TOUCHPAD= (1 << 17),
+ };
+ 
+ struct mt_slot {
+diff --git a/udev/90-libinput-model-quirks.hwdb b/udev/90-libinput-model-quirks.hwdb
+index eb2859e..d5978f7 100644
+--- a/udev/90-libinput-model-quirks.hwdb
++++ b/udev/90-libinput-model-quirks.hwdb
+@@ -100,6 +100,13 @@ libinput:name:Cypress APA Trackpad (cyapa):dmi:*
+ libinput:name:SynPS/2 Synaptics TouchPad:dmi:*svnLENOVO:*:pvrThinkPadX230*
+  LIBINPUT_MODEL_LENOVO_X230=1
+ 
++# Lenovo T450/T460 and all other Lenovos of the *50 and *60 generation,
++# including the X1 Carbon 3rd gen
++libinput:name:SynPS/2 Synaptics TouchPad:dmi:*svnLENOVO:*:pvrThinkPad??50*:
++libinput:name:SynPS/2 Synaptics TouchPad:dmi:*svnLENOVO:*:pvrThinkPad??60*:
++libinput:name:SynPS/2 Synaptics TouchPad:dmi:*svnLENOVO:*:pvrThinkPadX1Carbon3rd:*
++ LIBINPUT_MODEL_LENOVO_T450_TOUCHPAD=1
++
+ ##########################################
+ # Synaptics
+ ##########################################
+-- 
+2.5.0
+

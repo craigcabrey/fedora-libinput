@@ -5,7 +5,7 @@
 
 Name:           libinput
 Version:        1.2.1
-Release:        3%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Release:        4%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 License:        MIT
@@ -23,6 +23,9 @@ Patch01:        0001-touchpad-serial-synaptics-need-to-fake-new-touches-o.patch
 
 # https://bugzilla.redhat.com/show_bug.cgi?id=1314955
 Patch02:        0001-tablet-reject-mislabelled-tablet-devices.patch
+
+# https://bugs.freedesktop.org/show_bug.cgi?id=94379
+Patch03:        0001-touchpad-add-quirk-for-the-T450-and-T460-generation-.patch
 
 BuildRequires:  git
 BuildRequires:  autoconf automake libtool pkgconfig
@@ -100,6 +103,9 @@ find $RPM_BUILD_ROOT -name '*.la' -delete
 
 
 %changelog
+* Fri Mar 11 2016 Peter Hutterer <peter.hutterer@redhat.com> 1.2.1-4
+- Fix jerky pointer motion on the Lenovo T450/T460/X1 3rd hardware
+
 * Mon Mar 07 2016 Peter Hutterer <peter.hutterer@redhat.com> 1.2.1-3
 - Fix segfault on mislabeled tablets (#1314955)
 
