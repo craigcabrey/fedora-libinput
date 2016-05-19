@@ -5,7 +5,7 @@
 
 Name:           libinput
 Version:        1.3.0
-Release:        1%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Release:        2%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 License:        MIT
@@ -20,6 +20,9 @@ Source0:        http://www.freedesktop.org/software/libinput/libinput-%{version}
 
 # Not upstream, keep until kernel 4.2 or 4.1.x with dbf3c37086 
 Patch01:        0001-touchpad-serial-synaptics-need-to-fake-new-touches-o.patch
+
+# https://bugzilla.redhat.com/show_bug.cgi?id=1335249
+Patch02:        0001-touchpad-only-use-negative-pressure-change-check-on-.patch
 
 BuildRequires:  git
 BuildRequires:  autoconf automake libtool pkgconfig
@@ -97,6 +100,10 @@ find $RPM_BUILD_ROOT -name '*.la' -delete
 
 
 %changelog
+* Thu May 19 2016 Peter Hutterer <peter.hutterer@redhat.com> 1.3.0-2
+- Disable negative pressure transition on non-synaptics pads to avoid
+  jerky movement (#1335249)
+
 * Tue May 10 2016 Peter Hutterer <peter.hutterer@redhat.com> 1.3.0-1
 - libinput 1.3.0
 
