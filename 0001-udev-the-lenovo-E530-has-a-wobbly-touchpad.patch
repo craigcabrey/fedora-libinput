@@ -1,0 +1,28 @@
+From 07cca736d9104610978723f9050ba7ce603c62db Mon Sep 17 00:00:00 2001
+From: Peter Hutterer <peter.hutterer@who-t.net>
+Date: Mon, 16 May 2016 10:26:01 +1000
+Subject: [PATCH libinput] udev: the lenovo E530 has a wobbly touchpad
+
+Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+---
+ udev/90-libinput-model-quirks.hwdb | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/udev/90-libinput-model-quirks.hwdb b/udev/90-libinput-model-quirks.hwdb
+index 147fec2..f1ab211 100644
+--- a/udev/90-libinput-model-quirks.hwdb
++++ b/udev/90-libinput-model-quirks.hwdb
+@@ -115,6 +115,10 @@ libinput:name:SynPS/2 Synaptics TouchPad:dmi:*svnLENOVO:*:pvrThinkPad??60*:
+ libinput:name:SynPS/2 Synaptics TouchPad:dmi:*svnLENOVO:*:pvrThinkPadX1Carbon3rd:*
+  LIBINPUT_MODEL_LENOVO_T450_TOUCHPAD=1
+ 
++# Lenovo E530
++libinput:name:*SynPS/2 Synaptics TouchPad*:dmi:*svnLENOVO*pvrThinkPadEdgeE530:*
++ LIBINPUT_MODEL_WOBBLY_TOUCHPAD=1
++
+ ##########################################
+ # Synaptics
+ ##########################################
+-- 
+2.7.4
+

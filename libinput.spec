@@ -5,7 +5,7 @@
 
 Name:           libinput
 Version:        1.3.0
-Release:        2%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Release:        3%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 License:        MIT
@@ -23,6 +23,10 @@ Patch01:        0001-touchpad-serial-synaptics-need-to-fake-new-touches-o.patch
 
 # https://bugzilla.redhat.com/show_bug.cgi?id=1335249
 Patch02:        0001-touchpad-only-use-negative-pressure-change-check-on-.patch
+
+Patch03:        0001-udev-the-lenovo-E530-has-a-wobbly-touchpad.patch
+Patch04:        0001-udev-add-the-Yoga-2-to-the-wobbly-touchpads.patch
+Patch05:        0001-udev-add-the-Dell-Lattitude-E5420-to-the-wobbly-touc.patch
 
 BuildRequires:  git
 BuildRequires:  autoconf automake libtool pkgconfig
@@ -100,6 +104,9 @@ find $RPM_BUILD_ROOT -name '*.la' -delete
 
 
 %changelog
+* Fri May 20 2016 Peter Hutterer <peter.hutterer@redhat.com> 1.3.0-3
+- Stop pointer jitter on the Dell E5420, E530 and Lenovo Yoga 2
+
 * Thu May 19 2016 Peter Hutterer <peter.hutterer@redhat.com> 1.3.0-2
 - Disable negative pressure transition on non-synaptics pads to avoid
   jerky movement (#1335249)

@@ -1,0 +1,28 @@
+From 20c194de524408b2c2cc9662388e324540bbd3b1 Mon Sep 17 00:00:00 2001
+From: Peter Hutterer <peter.hutterer@who-t.net>
+Date: Thu, 19 May 2016 15:04:24 +1000
+Subject: [PATCH libinput] udev: add the Yoga 2 to the wobbly touchpads
+
+https://bugs.freedesktop.org/show_bug.cgi?id=95290
+
+Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+---
+ udev/90-libinput-model-quirks.hwdb | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/udev/90-libinput-model-quirks.hwdb b/udev/90-libinput-model-quirks.hwdb
+index f1ab211..a066df0 100644
+--- a/udev/90-libinput-model-quirks.hwdb
++++ b/udev/90-libinput-model-quirks.hwdb
+@@ -117,6 +117,8 @@ libinput:name:SynPS/2 Synaptics TouchPad:dmi:*svnLENOVO:*:pvrThinkPadX1Carbon3rd
+ 
+ # Lenovo E530
+ libinput:name:*SynPS/2 Synaptics TouchPad*:dmi:*svnLENOVO*pvrThinkPadEdgeE530:*
++# Lenovo Yoga 2013
++libinput:name:*SynPS/2 Synaptics TouchPad*:dmi:*svnLENOVO*pvrLenovoYoga213:*
+  LIBINPUT_MODEL_WOBBLY_TOUCHPAD=1
+ 
+ ##########################################
+-- 
+2.7.4
+
