@@ -4,8 +4,8 @@
 %global gitversion 58abea394
 
 Name:           libinput
-Version:        1.3.0
-Release:        3%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Version:        1.3.1
+Release:        1%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 License:        MIT
@@ -21,12 +21,7 @@ Source0:        http://www.freedesktop.org/software/libinput/libinput-%{version}
 # Not upstream, keep until kernel 4.2 or 4.1.x with dbf3c37086 
 Patch01:        0001-touchpad-serial-synaptics-need-to-fake-new-touches-o.patch
 
-# https://bugzilla.redhat.com/show_bug.cgi?id=1335249
-Patch02:        0001-touchpad-only-use-negative-pressure-change-check-on-.patch
-
 Patch03:        0001-udev-the-lenovo-E530-has-a-wobbly-touchpad.patch
-Patch04:        0001-udev-add-the-Yoga-2-to-the-wobbly-touchpads.patch
-Patch05:        0001-udev-add-the-Dell-Lattitude-E5420-to-the-wobbly-touc.patch
 
 BuildRequires:  git
 BuildRequires:  autoconf automake libtool pkgconfig
@@ -104,6 +99,9 @@ find $RPM_BUILD_ROOT -name '*.la' -delete
 
 
 %changelog
+* Mon May 30 2016 Peter Hutterer <peter.hutterer@redhat.com> 1.3.1-1
+- libinput 1.3.1
+
 * Fri May 20 2016 Peter Hutterer <peter.hutterer@redhat.com> 1.3.0-3
 - Stop pointer jitter on the Dell E5420, E530 and Lenovo Yoga 2
 
