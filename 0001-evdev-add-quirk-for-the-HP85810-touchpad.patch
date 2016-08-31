@@ -1,0 +1,78 @@
+From a862c7d40f02423106fa23285eda93845cb57b91 Mon Sep 17 00:00:00 2001
+From: Peter Hutterer <peter.hutterer@who-t.net>
+Date: Tue, 30 Aug 2016 17:51:30 +1000
+Subject: [PATCH libinput] evdev: add quirk for the HP85810 touchpad
+
+The touchpad's says it can do two- and three-finger detection but it never
+sends events for it. Disable them so we treat it as pure single-finger
+touchpad.
+
+https://bugzilla.redhat.com/show_bug.cgi?id=1351285
+
+Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+---
+ src/evdev.c                        | 9 +++++++++
+ src/evdev.h                        | 1 +
+ udev/90-libinput-model-quirks.hwdb | 7 +++++++
+ 3 files changed, 17 insertions(+)
+
+diff --git a/src/evdev.c b/src/evdev.c
+index c3ca64c..60aa34a 100644
+--- a/src/evdev.c
++++ b/src/evdev.c
+@@ -1807,6 +1807,7 @@ evdev_read_model_flags(struct evdev_device *device)
+ 		MODEL(DELL_TOUCHPAD),
+ 		MODEL(TRACKBALL),
+ 		MODEL(APPLE_MAGICMOUSE),
++		MODEL(HP8510_TOUCHPAD),
+ 		{ NULL, EVDEV_MODEL_DEFAULT },
+ #undef MODEL
+ 	};
+@@ -2430,6 +2431,14 @@ evdev_pre_configure_model_quirks(struct evdev_device *device)
+ 	 */
+ 	if (device->model_flags & EVDEV_MODEL_APPLE_MAGICMOUSE)
+ 		libevdev_disable_event_type(device->evdev, EV_ABS);
++
++	/* Claims to have double/tripletap but doesn't actually send it
++	 * https://bugzilla.redhat.com/show_bug.cgi?id=1351285
++	 */
++	if (device->model_flags & EVDEV_MODEL_HP8510_TOUCHPAD) {
++		libevdev_disable_event_code(device->evdev, EV_KEY, BTN_TOOL_DOUBLETAP);
++		libevdev_disable_event_code(device->evdev, EV_KEY, BTN_TOOL_TRIPLETAP);
++	}
+ }
+ 
+ struct evdev_device *
+diff --git a/src/evdev.h b/src/evdev.h
+index f9c0dd1..20369a7 100644
+--- a/src/evdev.h
++++ b/src/evdev.h
+@@ -118,6 +118,7 @@ enum evdev_device_model {
+ 	EVDEV_MODEL_DELL_TOUCHPAD = (1 << 18),
+ 	EVDEV_MODEL_TRACKBALL = (1 << 19),
+ 	EVDEV_MODEL_APPLE_MAGICMOUSE = (1 << 20),
++	EVDEV_MODEL_HP8510_TOUCHPAD = (1 << 21),
+ };
+ 
+ struct mt_slot {
+diff --git a/udev/90-libinput-model-quirks.hwdb b/udev/90-libinput-model-quirks.hwdb
+index ebce8d2..2bccc71 100644
+--- a/udev/90-libinput-model-quirks.hwdb
++++ b/udev/90-libinput-model-quirks.hwdb
+@@ -87,6 +87,13 @@ libinput:name:Cypress APA Trackpad ?cyapa?:dmi:*
+  LIBINPUT_MODEL_CYAPA=1
+ 
+ ##########################################
++# HP
++##########################################
++#
++libinput:name:SynPS/2 Synaptics TouchPad:dmi:*svnHewlett-Packard:*pnHPCompaq8510w*
++ LIBINPUT_MODEL_HP8510_TOUCHPAD=1
++
++##########################################
+ # LENOVO
+ ##########################################
+ 
+-- 
+2.7.4
+
