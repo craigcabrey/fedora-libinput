@@ -4,8 +4,8 @@
 %global gitversion 58abea394
 
 Name:           libinput
-Version:        1.4.901
-Release:        2%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Version:        1.5.0
+Release:        1%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 License:        MIT
@@ -20,7 +20,6 @@ Source0:        http://www.freedesktop.org/software/libinput/libinput-%{version}
 
 # Not upstream, keep until kernel 4.2 or 4.1.x with dbf3c37086 
 Patch01:        0001-touchpad-serial-synaptics-need-to-fake-new-touches-o.patch
-Patch02:        0001-touchpad-require-at-least-3-events-before-enabling-t.patch
 
 BuildRequires:  git
 BuildRequires:  autoconf automake libtool pkgconfig
@@ -98,6 +97,9 @@ find $RPM_BUILD_ROOT -name '*.la' -delete
 
 
 %changelog
+* Wed Sep 14 2016 Peter Hutterer <peter.hutterer@redhat.com> 1.5.0-1
+- libinput 1.5.0
+
 * Thu Sep 08 2016 Peter Hutterer <peter.hutterer@redhat.com> 1.4.901-2
 - Avoid spurious trackpoint events halting the touchpad (related #1364850)
 
