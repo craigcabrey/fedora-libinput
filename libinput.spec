@@ -4,8 +4,8 @@
 %global gitversion 58abea394
 
 Name:           libinput
-Version:        1.5.0
-Release:        2%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Version:        1.5.1
+Release:        1%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 License:        MIT
@@ -94,6 +94,9 @@ find $RPM_BUILD_ROOT -name '*.la' -delete
 
 
 %changelog
+* Fri Nov 11 2016 Peter Hutterer <peter.hutterer@redhat.com> 1.5.1-1
+- libinput 1.5.1
+
 * Wed Sep 14 2016 Peter Hutterer <peter.hutterer@redhat.com> 1.5.0-2
 - Drop the synaptics 3-slot workaround
 
