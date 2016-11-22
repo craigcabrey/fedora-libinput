@@ -5,7 +5,7 @@
 
 Name:           libinput
 Version:        1.5.1
-Release:        1%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Release:        2%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 License:        MIT
@@ -17,6 +17,8 @@ Source2:        commitid
 %else
 Source0:        http://www.freedesktop.org/software/libinput/libinput-%{version}.tar.xz
 %endif
+
+Patch01:        0001-touchpad-only-use-the-last-two-coordinates-for-delta.patch
 
 BuildRequires:  git
 BuildRequires:  autoconf automake libtool pkgconfig
@@ -94,6 +96,9 @@ find $RPM_BUILD_ROOT -name '*.la' -delete
 
 
 %changelog
+* Tue Nov 22 2016 Peter Hutterer <peter.hutterer@redhat.com> 1.5.1-2
+- Improve responsiveness of touchpads by reducing the motion history.
+
 * Fri Nov 11 2016 Peter Hutterer <peter.hutterer@redhat.com> 1.5.1-1
 - libinput 1.5.1
 
