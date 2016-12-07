@@ -4,8 +4,8 @@
 %global gitversion 58abea394
 
 Name:           libinput
-Version:        1.5.2
-Release:        2%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Version:        1.5.3
+Release:        1%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 License:        MIT
@@ -94,6 +94,9 @@ find $RPM_BUILD_ROOT -name '*.la' -delete
 
 
 %changelog
+* Wed Dec 07 2016 Peter Hutterer <peter.hutterer@redhat.com> 1.5.3-1
+- libinput 1.5.3
+
 * Fri Nov 25 2016 Peter Hutterer <peter.hutterer@redhat.com> 1.5.2-2
 - Swap to the correct tarball so we match the checksums from upstream (had a
   local mixup of tarballs)
