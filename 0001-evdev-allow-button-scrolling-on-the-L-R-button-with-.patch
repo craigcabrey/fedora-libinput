@@ -1,0 +1,135 @@
+From e238154dd36255d33b56fd6aebc1f591e40d84dd Mon Sep 17 00:00:00 2001
+From: Peter Hutterer <peter.hutterer@who-t.net>
+Date: Mon, 20 Feb 2017 09:14:42 +1000
+Subject: [PATCH libinput] evdev: allow button scrolling on the L/R button with
+ middle emulation active
+
+This worked before, but triggered a negative timer bug. When one of the
+physical L/R buttons is pressed with middle button emulation enabled, the
+flow is:
+1) phys left button down
+2) middle button state machine discards events, sets timer
+3) timer expires or button is released
+4) middle button state machine sends button press with time from 1)
+5) emulation code sees button press, sets timer for scroll emulation
+6) timer logs bug because (original-button-time + timeout) is less than now()
+
+That log_bug_libinput() warning fails the tests but works otherwise.
+
+Allow this situation explicitly, on some devices we only have left and right
+buttons and no scroll wheel, so having middle button emulation *and*
+button-scroll working is useful.
+
+https://bugs.freedesktop.org/show_bug.cgi?id=99845
+
+Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+Reviewed-by: Hans de Goede <hdegoede@redhat.com>
+(cherry picked from commit e43f9da9ecea6d17100c0012a89f5d162b2d7d7b)
+---
+ src/evdev.c | 20 ++++++++++++++++++--
+ src/timer.c | 22 ++++++++++++++++------
+ src/timer.h | 10 ++++++++++
+ 3 files changed, 44 insertions(+), 8 deletions(-)
+
+diff --git a/src/evdev.c b/src/evdev.c
+index 29ebadd..17b28ec 100644
+--- a/src/evdev.c
++++ b/src/evdev.c
+@@ -229,8 +229,24 @@ evdev_button_scroll_button(struct evdev_device *device,
+ 	device->scroll.button_scroll_btn_pressed = is_press;
+ 
+ 	if (is_press) {
+-		libinput_timer_set(&device->scroll.timer,
+-				   time + DEFAULT_MIDDLE_BUTTON_SCROLL_TIMEOUT);
++		enum timer_flags flags = TIMER_FLAG_NONE;
++
++		/* Special case: if middle button emulation is enabled and
++		 * our scroll button is the left or right button, we only
++		 * get here *after* the middle button timeout has expired
++		 * for that button press. The time passed is the button-down
++		 * time though (which is in the past), so we have to allow
++		 * for a negative timer to be set.
++		 */
++		if (device->middlebutton.enabled &&
++		    (device->scroll.button == BTN_LEFT ||
++		     device->scroll.button == BTN_RIGHT)) {
++			flags = TIMER_FLAG_ALLOW_NEGATIVE;
++		}
++
++		libinput_timer_set_flags(&device->scroll.timer,
++					 time + DEFAULT_MIDDLE_BUTTON_SCROLL_TIMEOUT,
++					 flags);
+ 		device->scroll.button_down_time = time;
+ 	} else {
+ 		libinput_timer_cancel(&device->scroll.timer);
+diff --git a/src/timer.c b/src/timer.c
+index c924794..362d81d 100644
+--- a/src/timer.c
++++ b/src/timer.c
+@@ -67,19 +67,23 @@ libinput_timer_arm_timer_fd(struct libinput *libinput)
+ }
+ 
+ void
+-libinput_timer_set(struct libinput_timer *timer, uint64_t expire)
++libinput_timer_set_flags(struct libinput_timer *timer,
++			 uint64_t expire,
++			 uint32_t flags)
+ {
+ #ifndef NDEBUG
+ 	uint64_t now = libinput_now(timer->libinput);
+-	if (expire < now)
+-		log_bug_libinput(timer->libinput,
+-				 "timer offset negative (-%" PRIu64 ")\n",
+-				 now - expire);
+-	else if ((expire - now) > ms2us(5000))
++	if (expire < now) {
++		if ((flags & TIMER_FLAG_ALLOW_NEGATIVE) == 0)
++			log_bug_libinput(timer->libinput,
++					 "timer offset negative (-%" PRIu64 ")\n",
++					 now - expire);
++	} else if ((expire - now) > ms2us(5000)) {
+ 		log_bug_libinput(timer->libinput,
+ 				 "timer offset more than 5s, now %"
+ 				 PRIu64 " expire %" PRIu64 "\n",
+ 				 now, expire);
++	}
+ #endif
+ 
+ 	assert(expire);
+@@ -92,6 +96,12 @@ libinput_timer_set(struct libinput_timer *timer, uint64_t expire)
+ }
+ 
+ void
++libinput_timer_set(struct libinput_timer *timer, uint64_t expire)
++{
++	libinput_timer_set_flags(timer, expire, TIMER_FLAG_NONE);
++}
++
++void
+ libinput_timer_cancel(struct libinput_timer *timer)
+ {
+ 	if (!timer->expire)
+diff --git a/src/timer.h b/src/timer.h
+index f8315cf..93d684a 100644
+--- a/src/timer.h
++++ b/src/timer.h
+@@ -47,6 +47,16 @@ libinput_timer_init(struct libinput_timer *timer, struct libinput *libinput,
+ void
+ libinput_timer_set(struct libinput_timer *timer, uint64_t expire);
+ 
++enum timer_flags {
++	TIMER_FLAG_NONE = 0,
++	TIMER_FLAG_ALLOW_NEGATIVE = (1 << 0),
++};
++
++void
++libinput_timer_set_flags(struct libinput_timer *timer,
++			 uint64_t expire,
++			 uint32_t flags);
++
+ void
+ libinput_timer_cancel(struct libinput_timer *timer);
+ 
+-- 
+2.9.3
+

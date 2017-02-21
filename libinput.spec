@@ -5,7 +5,7 @@
 
 Name:           libinput
 Version:        1.6.2
-Release:        1%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Release:        2%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 License:        MIT
@@ -17,6 +17,9 @@ Source2:        commitid
 %else
 Source0:        http://www.freedesktop.org/software/libinput/libinput-%{version}.tar.xz
 %endif
+
+Patch01:        0001-evdev-allow-button-scrolling-on-the-L-R-button-with-.patch
+Patch02:        0001-evdev-add-quirk-for-Logitech-Marble-Mouse.patch
 
 BuildRequires:  git
 BuildRequires:  autoconf automake libtool pkgconfig
@@ -94,6 +97,9 @@ find $RPM_BUILD_ROOT -name '*.la' -delete
 
 
 %changelog
+* Wed Feb 22 2017 Peter Hutterer <peter.hutterer@redhat.com> 1.6.2-2
+- Fix middle button emulation for Logitech Marble Mouse (#1421439)
+
 * Tue Feb 21 2017 Peter Hutterer <peter.hutterer@redhat.com> 1.6.2-1
 - libinput 1.6.2
 
