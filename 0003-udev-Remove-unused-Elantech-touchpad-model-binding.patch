@@ -1,0 +1,60 @@
+From c24abedeb4d5fc0245dfcd7e3eed3561f5767b11 Mon Sep 17 00:00:00 2001
+From: Paul Kocialkowski <contact@paulk.fr>
+Date: Fri, 28 Apr 2017 15:29:02 +0200
+Subject: [PATCH libinput 3/5] udev: Remove unused Elantech touchpad model
+ binding
+
+The Elantech touchpad model binding in udev is currently unused, since
+pressure values were moved to a udev binding of their own.
+
+This gets rid of the deprecated model binding.
+
+Signed-off-by: Paul Kocialkowski <contact@paulk.fr>
+Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+(cherry picked from commit 6af9f8e5fbb9f5588eeb51185d2cc0d7f93d34ee)
+---
+ src/evdev.c                        | 1 -
+ src/evdev.h                        | 1 -
+ udev/90-libinput-model-quirks.hwdb | 1 -
+ 3 files changed, 3 deletions(-)
+
+diff --git a/src/evdev.c b/src/evdev.c
+index 2d18bed..3b4bc4b 100644
+--- a/src/evdev.c
++++ b/src/evdev.c
+@@ -2245,7 +2245,6 @@ evdev_read_model_flags(struct evdev_device *device)
+ 		MODEL(ALPS_TOUCHPAD),
+ 		MODEL(SYNAPTICS_SERIAL_TOUCHPAD),
+ 		MODEL(JUMPING_SEMI_MT),
+-		MODEL(ELANTECH_TOUCHPAD),
+ 		MODEL(APPLE_INTERNAL_KEYBOARD),
+ 		MODEL(CYBORG_RAT),
+ 		MODEL(CYAPA),
+diff --git a/src/evdev.h b/src/evdev.h
+index 465b8a3..c9a44f8 100644
+--- a/src/evdev.h
++++ b/src/evdev.h
+@@ -111,7 +111,6 @@ enum evdev_device_model {
+ 	EVDEV_MODEL_ALPS_TOUCHPAD = (1 << 8),
+ 	EVDEV_MODEL_SYNAPTICS_SERIAL_TOUCHPAD = (1 << 9),
+ 	EVDEV_MODEL_JUMPING_SEMI_MT = (1 << 10),
+-	EVDEV_MODEL_ELANTECH_TOUCHPAD = (1 << 11),
+ 	EVDEV_MODEL_LENOVO_X220_TOUCHPAD_FW81 = (1 << 12),
+ 	EVDEV_MODEL_APPLE_INTERNAL_KEYBOARD = (1 << 13),
+ 	EVDEV_MODEL_CYBORG_RAT = (1 << 14),
+diff --git a/udev/90-libinput-model-quirks.hwdb b/udev/90-libinput-model-quirks.hwdb
+index 1b9876f..eaa9345 100644
+--- a/udev/90-libinput-model-quirks.hwdb
++++ b/udev/90-libinput-model-quirks.hwdb
+@@ -86,7 +86,6 @@ libinput:name:* Touchpad:dmi:*svnDellInc.:*
+ libinput:name:*ETPS/2 Elantech Touchpad*:dmi:*
+  LIBINPUT_ATTR_RESOLUTION_HINT=31x31
+  LIBINPUT_ATTR_PRESSURE_RANGE=24:10
+- LIBINPUT_MODEL_ELANTECH_TOUCHPAD=1
+ 
+ ##########################################
+ # Google
+-- 
+2.9.3
+

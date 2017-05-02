@@ -18,6 +18,12 @@ Source2:        commitid
 Source0:        http://www.freedesktop.org/software/libinput/libinput-%{version}.tar.xz
 %endif
 
+Patch01: 0001-touchpad-move-the-pressure-range-to-a-hwdb-entry.patch
+Patch02: 0002-doc-add-documentation-for-touchpad-pressure-detectio.patch
+Patch03: 0003-udev-Remove-unused-Elantech-touchpad-model-binding.patch
+Patch04: 0004-udev-Select-more-generic-pressure-range-values-for-E.patch
+Patch05: 0005-udev-Add-specific-pressure-range-for-the-ASUS-ZenBoo.patch
+
 BuildRequires:  git
 BuildRequires:  autoconf automake libtool pkgconfig
 BuildRequires:  libevdev-devel
@@ -94,6 +100,9 @@ find $RPM_BUILD_ROOT -name '*.la' -delete
 
 
 %changelog
+* Tue May 02 2017 Peter Hutterer <peter.hutterer@redhat.com> 1.7.1-1
+- Add patches to fix elantech pressure detection
+
 * Tue Apr 25 2017 Peter Hutterer <peter.hutterer@redhat.com> 1.7.1-1
 - libinput 1.7.1
 
