@@ -5,7 +5,7 @@
 
 Name:           libinput
 Version:        1.7.1
-Release:        1%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Release:        2%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 License:        MIT
@@ -100,7 +100,7 @@ find $RPM_BUILD_ROOT -name '*.la' -delete
 
 
 %changelog
-* Tue May 02 2017 Peter Hutterer <peter.hutterer@redhat.com> 1.7.1-1
+* Tue May 02 2017 Peter Hutterer <peter.hutterer@redhat.com> 1.7.1-2
 - Add patches to fix elantech pressure detection
 
 * Tue Apr 25 2017 Peter Hutterer <peter.hutterer@redhat.com> 1.7.1-1
