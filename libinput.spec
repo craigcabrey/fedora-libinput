@@ -5,7 +5,7 @@
 
 Name:           libinput
 Version:        1.7.1
-Release:        2%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Release:        3%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 License:        MIT
@@ -18,11 +18,13 @@ Source2:        commitid
 Source0:        http://www.freedesktop.org/software/libinput/libinput-%{version}.tar.xz
 %endif
 
+
 Patch01: 0001-touchpad-move-the-pressure-range-to-a-hwdb-entry.patch
 Patch02: 0002-doc-add-documentation-for-touchpad-pressure-detectio.patch
 Patch03: 0003-udev-Remove-unused-Elantech-touchpad-model-binding.patch
 Patch04: 0004-udev-Select-more-generic-pressure-range-values-for-E.patch
 Patch05: 0005-udev-Add-specific-pressure-range-for-the-ASUS-ZenBoo.patch
+Patch06: 0001-lid-re-init-the-event-listener-after-removing-it.patch
 
 BuildRequires:  git
 BuildRequires:  autoconf automake libtool pkgconfig
@@ -100,6 +102,10 @@ find $RPM_BUILD_ROOT -name '*.la' -delete
 
 
 %changelog
+* Thu May 04 2017 Peter Hutterer <peter.hutterer@redhat.com> 1.7.1-3
+- Fix crash when we have multiple keyboard event listeners for the lid
+  switch (#1440927)
+
 * Tue May 02 2017 Peter Hutterer <peter.hutterer@redhat.com> 1.7.1-2
 - Add patches to fix elantech pressure detection
 

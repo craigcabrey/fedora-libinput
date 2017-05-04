@@ -1,0 +1,53 @@
+From 72d597502c3bbf3462887c23afd2f184314409e8 Mon Sep 17 00:00:00 2001
+From: Peter Hutterer <peter.hutterer@who-t.net>
+Date: Thu, 4 May 2017 14:50:31 +1000
+Subject: [PATCH libinput] lid: re-init the event listener after removing it
+
+We may call remove on it again and that segfaults if it hasn't been
+initialized.
+
+Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+(cherry picked from commit 3735359f0c66208658754e2c2b5f7e7041a2e290)
+---
+ src/evdev-lid.c | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
+
+diff --git a/src/evdev-lid.c b/src/evdev-lid.c
+index 8db7f37c..e71499bb 100644
+--- a/src/evdev-lid.c
++++ b/src/evdev-lid.c
+@@ -98,7 +98,9 @@ lid_switch_toggle_keyboard_listener(struct lid_switch_dispatch *dispatch,
+ 					   dispatch);
+ 	} else {
+ 		libinput_device_remove_event_listener(
+-						      &dispatch->keyboard.listener);
++					&dispatch->keyboard.listener);
++		libinput_device_init_event_listener(
++					&dispatch->keyboard.listener);
+ 	}
+ }
+ 
+@@ -197,7 +199,9 @@ lid_switch_pair_keyboard(struct evdev_device *lid_switch,
+ 	if (dispatch->keyboard.keyboard) {
+ 		if (bus_kbd != BUS_I8042)
+ 			return;
++
+ 		libinput_device_remove_event_listener(&dispatch->keyboard.listener);
++		libinput_device_init_event_listener(&dispatch->keyboard.listener);
+ 	}
+ 
+ 	dispatch->keyboard.keyboard = keyboard;
+@@ -225,7 +229,9 @@ lid_switch_interface_device_removed(struct evdev_device *device,
+ 
+ 	if (removed_device == dispatch->keyboard.keyboard) {
+ 		libinput_device_remove_event_listener(
+-				      &dispatch->keyboard.listener);
++					&dispatch->keyboard.listener);
++		libinput_device_init_event_listener(
++					&dispatch->keyboard.listener);
+ 		dispatch->keyboard.keyboard = NULL;
+ 	}
+ }
+-- 
+2.12.2
+
