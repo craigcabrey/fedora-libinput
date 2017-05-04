@@ -5,7 +5,7 @@
 
 Name:           libinput
 Version:        1.7.1
-Release:        3%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Release:        4%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 License:        MIT
@@ -102,6 +102,9 @@ find $RPM_BUILD_ROOT -name '*.la' -delete
 
 
 %changelog
+* Thu May 04 2017 Peter Hutterer <peter.hutterer@redhat.com> 1.7.1-4
+- Fix a crash when shutting down a touchpad lid listener (#1440927)
+
 * Thu May 04 2017 Peter Hutterer <peter.hutterer@redhat.com> 1.7.1-3
 - Fix crash when we have multiple keyboard event listeners for the lid
   switch (#1440927)
