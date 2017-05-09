@@ -1,0 +1,46 @@
+From 3a940332df9dbc07ceff076e70a0972d2cf28769 Mon Sep 17 00:00:00 2001
+From: Peter Hutterer <peter.hutterer@who-t.net>
+Date: Tue, 9 May 2017 15:07:20 +1000
+Subject: [PATCH libinput] touchpad: pull the tap exclusion zone down to the
+ full edge zone
+
+This was originally left outside of the button areas in case users tap in
+those zones, but we're getting false tap events in that zone.
+
+On a 100mm touchpad, the edge zone is merely 5mm, it's acceptable to ignore
+taps in that area even in the software button. We can revisit this if we see
+tap detection failures in the future.
+
+https://bugzilla.redhat.com/show_bug.cgi?id=1415796
+
+Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+---
+ src/evdev-mt-touchpad.c | 12 +++---------
+ 1 file changed, 3 insertions(+), 9 deletions(-)
+
+diff --git a/src/evdev-mt-touchpad.c b/src/evdev-mt-touchpad.c
+index e0757e17..54fa650b 100644
+--- a/src/evdev-mt-touchpad.c
++++ b/src/evdev-mt-touchpad.c
+@@ -557,15 +557,9 @@ tp_palm_tap_is_palm(const struct tp_dispatch *tp, const struct tp_touch *t)
+ 	    t->point.x < tp->palm.right_edge)
+ 		return false;
+ 
+-	/* We're inside the left/right palm edge and not in one of the
+-	 * software button areas */
+-	if (t->point.y < tp->buttons.bottom_area.top_edge) {
+-		evdev_log_debug(tp->device,
+-				"palm: palm-tap detected\n");
+-		return true;
+-	}
+-
+-	return false;
++	evdev_log_debug(tp->device,
++			"palm: palm-tap detected\n");
++	return true;
+ }
+ 
+ static bool
+-- 
+2.12.2
+
