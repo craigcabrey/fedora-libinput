@@ -4,8 +4,8 @@
 %global gitversion 58abea394
 
 Name:           libinput
-Version:        1.7.2
-Release:        2%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Version:        1.7.3
+Release:        1%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 License:        MIT
@@ -17,9 +17,6 @@ Source2:        commitid
 %else
 Source0:        http://www.freedesktop.org/software/libinput/libinput-%{version}.tar.xz
 %endif
-
-Patch06: 0001-lid-re-init-the-event-listener-after-removing-it.patch
-Patch07: 0001-touchpad-pull-the-tap-exclusion-zone-down-to-the-ful.patch
 
 BuildRequires:  git
 BuildRequires:  autoconf automake libtool pkgconfig
@@ -97,6 +94,9 @@ find $RPM_BUILD_ROOT -name '*.la' -delete
 
 
 %changelog
+* Mon Jun 12 2017 Peter Hutterer <peter.hutterer@redhat.com> 1.7.3-1
+- libinput 1.7.3
+
 * Tue May 09 2017 Peter Hutterer <peter.hutterer@redhat.com> 1.7.2-2
 - Ignore taps in the palm detection area even in software buttons (#1415796)
 
