@@ -4,7 +4,7 @@
 %global gitversion 58abea394
 
 Name:           libinput
-Version:        1.7.3
+Version:        1.7.901
 Release:        1%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
@@ -58,7 +58,12 @@ git am -p1 %{patches} < /dev/null
 
 %build
 autoreconf -v --install --force || exit 1
-%configure --disable-static --disable-silent-rules --with-udev-dir=%{udevdir}
+%configure --disable-static \
+           --disable-debug-gui \
+           --disable-documentation \
+           --disable-tests \
+           --disable-silent-rules \
+           --with-udev-dir=%{udevdir}
 make %{?_smp_mflags}
 
 
@@ -82,10 +87,19 @@ find $RPM_BUILD_ROOT -name '*.la' -delete
 %{udevdir}/rules.d/80-libinput-device-groups.rules
 %{udevdir}/rules.d/90-libinput-model-quirks.rules
 %{udevdir}/hwdb.d/90-libinput-model-quirks.hwdb
-%{_bindir}/libinput-list-devices
-%{_bindir}/libinput-debug-events
+%{_bindir}/libinput
+%dir %{_libexecdir}/libinput/
+%{_libexecdir}/libinput/libinput-debug-events
+%{_libexecdir}/libinput/libinput-list-devices
+%{_libexecdir}/libinput/libinput-measure
+%{_libexecdir}/libinput/libinput-measure-touchpad-tap
+%{_mandir}/man1/libinput.1*
+%{_mandir}/man1/libinput-measure.1*
+%{_mandir}/man1/libinput-measure-touchpad-tap.1*
 %{_mandir}/man1/libinput-list-devices.1*
 %{_mandir}/man1/libinput-debug-events.1*
+%{_bindir}/libinput-list-devices
+%{_bindir}/libinput-debug-events
 
 %files devel
 %{_includedir}/libinput.h
@@ -94,6 +108,9 @@ find $RPM_BUILD_ROOT -name '*.la' -delete
 
 
 %changelog
+* Mon Jun 19 2017 Peter Hutterer <peter.hutterer@redhat.com> 1.7.901-1
+- libinput 1.8rc1
+
 * Mon Jun 12 2017 Peter Hutterer <peter.hutterer@redhat.com> 1.7.3-1
 - libinput 1.7.3
 
