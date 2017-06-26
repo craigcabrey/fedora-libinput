@@ -4,8 +4,8 @@
 %global gitversion 58abea394
 
 Name:           libinput
-Version:        1.7.901
-Release:        2%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Version:        1.7.902
+Release:        1%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 License:        MIT
@@ -108,6 +108,9 @@ find $RPM_BUILD_ROOT -name '*.la' -delete
 
 
 %changelog
+* Mon Jun 26 2017 Peter Hutterer <peter.hutterer@redhat.com> 1.7.902-1
+- libinput 1.8rc2
+
 * Mon Jun 19 2017 Peter Hutterer <peter.hutterer@redhat.com> 1.7.901-2
 - libinput 1.8rc1 with source files this time
 
