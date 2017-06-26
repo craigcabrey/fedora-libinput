@@ -5,7 +5,7 @@
 
 Name:           libinput
 Version:        1.7.902
-Release:        1%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Release:        2%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 License:        MIT
@@ -19,7 +19,7 @@ Source0:        http://www.freedesktop.org/software/libinput/libinput-%{version}
 %endif
 
 BuildRequires:  git
-BuildRequires:  autoconf automake libtool pkgconfig
+BuildRequires:  meson pkgconfig
 BuildRequires:  libevdev-devel
 BuildRequires:  libudev-devel
 BuildRequires:  mtdev-devel libwacom-devel
@@ -57,20 +57,14 @@ git commit --allow-empty -a -q -m "%{version} baseline."
 git am -p1 %{patches} < /dev/null
 
 %build
-autoreconf -v --install --force || exit 1
-%configure --disable-static \
-           --disable-debug-gui \
-           --disable-documentation \
-           --disable-tests \
-           --disable-silent-rules \
-           --with-udev-dir=%{udevdir}
-make %{?_smp_mflags}
-
+%meson -Ddebug-gui=false \
+       -Ddocumentation=false \
+       -Dtests=false \
+       -Dudev-dir=%{udevdir}
+%meson_build
 
 %install
-%make_install
-find $RPM_BUILD_ROOT -name '*.la' -delete
-
+%meson_install
 
 %post
 /sbin/ldconfig
@@ -108,6 +102,9 @@ find $RPM_BUILD_ROOT -name '*.la' -delete
 
 
 %changelog
+* Tue Jun 27 2017 Peter Hutterer <peter.hutterer@redhat.com> 1.7.902-2
+- Switch to meson as build system
+
 * Mon Jun 26 2017 Peter Hutterer <peter.hutterer@redhat.com> 1.7.902-1
 - libinput 1.8rc2
 
