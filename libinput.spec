@@ -4,8 +4,8 @@
 %global gitversion 58abea394
 
 Name:           libinput
-Version:        1.7.902
-Release:        2%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Version:        1.8.0
+Release:        1%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 License:        MIT
@@ -102,6 +102,9 @@ git am -p1 %{patches} < /dev/null
 
 
 %changelog
+* Mon Jul 03 2017 Peter Hutterer <peter.hutterer@redhat.com> 1.8.0-1
+- libinput 1.8
+
 * Tue Jun 27 2017 Peter Hutterer <peter.hutterer@redhat.com> 1.7.902-2
 - Switch to meson as build system
 
