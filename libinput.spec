@@ -5,7 +5,7 @@
 
 Name:           libinput
 Version:        1.8.0
-Release:        1%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Release:        2%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 License:        MIT
@@ -18,12 +18,13 @@ Source2:        commitid
 Source0:        http://www.freedesktop.org/software/libinput/libinput-%{version}.tar.xz
 %endif
 
-BuildRequires:  git
-BuildRequires:  meson pkgconfig
-BuildRequires:  libevdev-devel
-BuildRequires:  libudev-devel
-BuildRequires:  mtdev-devel libwacom-devel
-BuildRequires:  pkgconfig(udev)
+BuildRequires:  git-core
+BuildRequires:  gcc
+BuildRequires:  meson
+BuildRequires:  pkgconfig(libudev)
+BuildRequires:  pkgconfig(mtdev) >= 1.1.0
+BuildRequires:  pkgconfig(libevdev) >= 0.4
+BuildRequires:  pkgconfig(libwacom) >= 0.20
 
 %description
 libinput is a library that handles input devices for display servers and other
@@ -102,6 +103,11 @@ git am -p1 %{patches} < /dev/null
 
 
 %changelog
+* Thu Jul 13 2017 Igor Gnatenko <ignatenko@redhat.com> - 1.8.0-2
+- Add missing BuildRequires: gcc
+- Fixup other BuildRequires
+- Rebuild for pkg-config fix from meson
+
 * Mon Jul 03 2017 Peter Hutterer <peter.hutterer@redhat.com> 1.8.0-1
 - libinput 1.8
 
