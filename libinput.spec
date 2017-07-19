@@ -4,8 +4,8 @@
 %global gitversion 58abea394
 
 Name:           libinput
-Version:        1.8.0
-Release:        2%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Version:        1.8.1
+Release:        1%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 License:        MIT
@@ -103,6 +103,9 @@ git am -p1 %{patches} < /dev/null
 
 
 %changelog
+* Wed Jul 19 2017 Peter Hutterer <peter.hutterer@redhat.com> 1.8.1-1
+- libinput 1.8.1
+
 * Thu Jul 13 2017 Igor Gnatenko <ignatenko@redhat.com> - 1.8.0-2
 - Add missing BuildRequires: gcc
 - Fixup other BuildRequires
