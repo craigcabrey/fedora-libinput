@@ -5,7 +5,7 @@
 
 Name:           libinput
 Version:        1.8.1
-Release:        2%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Release:        3%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 License:        MIT
@@ -103,6 +103,9 @@ git am -p1 %{patches} < /dev/null
 
 
 %changelog
+* Thu Aug 03 2017 Fedora Release Engineering <releng@fedoraproject.org> - 1.8.1-3
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_27_Binutils_Mass_Rebuild
+
 * Wed Jul 26 2017 Fedora Release Engineering <releng@fedoraproject.org> - 1.8.1-2
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_27_Mass_Rebuild
 
