@@ -5,7 +5,7 @@
 
 Name:           libinput
 Version:        1.8.1
-Release:        3%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Release:        4%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 License:        MIT
@@ -17,6 +17,9 @@ Source2:        commitid
 %else
 Source0:        http://www.freedesktop.org/software/libinput/libinput-%{version}.tar.xz
 %endif
+
+Patch01:        0001-gestures-don-t-try-to-pinch-for-nfingers-slots.patch
+Patch02:        0001-touchpad-don-t-resume-a-disabled-touchpad.patch
 
 BuildRequires:  git-core
 BuildRequires:  gcc
@@ -103,6 +106,10 @@ git am -p1 %{patches} < /dev/null
 
 
 %changelog
+* Tue Sep 05 2017 Peter Hutterer <peter.hutterer@redhat.com> 1.8.1-4
+- Don't try pinching when the finger number exceeds available slots
+- Don't resume a disabled touchpad after a lid switch open (#1448962)
+
 * Thu Aug 03 2017 Fedora Release Engineering <releng@fedoraproject.org> - 1.8.1-3
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_27_Binutils_Mass_Rebuild
 

@@ -1,0 +1,186 @@
+From 03f13ce6e854b3ff5d4b8971405a97afd66eef8e Mon Sep 17 00:00:00 2001
+From: Peter Hutterer <peter.hutterer@who-t.net>
+Date: Tue, 5 Sep 2017 14:38:53 +1000
+Subject: [PATCH libinput] touchpad: don't resume a disabled touchpad
+
+Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+---
+ src/evdev-mt-touchpad.c | 44 ++++++++++++++++++----------
+ test/test-lid.c         | 78 +++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 107 insertions(+), 15 deletions(-)
+
+diff --git a/src/evdev-mt-touchpad.c b/src/evdev-mt-touchpad.c
+index 5b8fb1ec..c0a78255 100644
+--- a/src/evdev-mt-touchpad.c
++++ b/src/evdev-mt-touchpad.c
+@@ -1426,6 +1426,31 @@ tp_resume(struct tp_dispatch *tp, struct evdev_device *device)
+ 	}
+ }
+ 
++#define NO_EXCLUDED_DEVICE NULL
++static void
++tp_resume_conditional(struct tp_dispatch *tp,
++		      struct evdev_device *device,
++		      struct evdev_device *excluded_device)
++{
++	if (tp->sendevents.current_mode == LIBINPUT_CONFIG_SEND_EVENTS_DISABLED)
++		return;
++
++	if (tp->sendevents.current_mode ==
++		    LIBINPUT_CONFIG_SEND_EVENTS_DISABLED_ON_EXTERNAL_MOUSE) {
++		struct libinput_device *dev;
++
++		list_for_each(dev, &device->base.seat->devices_list, link) {
++			struct evdev_device *d = evdev_device(dev);
++			if (d != excluded_device &&
++			    (d->tags & EVDEV_TAG_EXTERNAL_MOUSE)) {
++				return;
++			}
++		}
++	}
++
++	tp_resume(tp, device);
++}
++
+ static void
+ tp_trackpoint_timeout(uint64_t now, void *data)
+ {
+@@ -1667,7 +1692,7 @@ tp_lid_switch_event(uint64_t time, struct libinput_event *event, void *data)
+ 	swev = libinput_event_get_switch_event(event);
+ 	switch (libinput_event_switch_get_switch_state(swev)) {
+ 	case LIBINPUT_SWITCH_STATE_OFF:
+-		tp_resume(tp, tp->device);
++		tp_resume_conditional(tp, tp->device, NO_EXCLUDED_DEVICE);
+ 		evdev_log_debug(tp->device, "lid: resume touchpad\n");
+ 		break;
+ 	case LIBINPUT_SWITCH_STATE_ON:
+@@ -1722,7 +1747,6 @@ tp_interface_device_removed(struct evdev_device *device,
+ 			    struct evdev_device *removed_device)
+ {
+ 	struct tp_dispatch *tp = (struct tp_dispatch*)device->dispatch;
+-	struct libinput_device *dev;
+ 
+ 	if (removed_device == tp->buttons.trackpoint) {
+ 		/* Clear any pending releases for the trackpoint */
+@@ -1749,19 +1773,9 @@ tp_interface_device_removed(struct evdev_device *device,
+ 		tp->lid_switch.lid_switch = NULL;
+ 	}
+ 
+-	if (tp->sendevents.current_mode !=
+-	    LIBINPUT_CONFIG_SEND_EVENTS_DISABLED_ON_EXTERNAL_MOUSE)
+-		return;
+-
+-	list_for_each(dev, &device->base.seat->devices_list, link) {
+-		struct evdev_device *d = evdev_device(dev);
+-		if (d != removed_device &&
+-		    (d->tags & EVDEV_TAG_EXTERNAL_MOUSE)) {
+-			return;
+-		}
+-	}
+-
+-	tp_resume(tp, device);
++	/* removed_device is still in the device list at this point, so we
++	 * need to exclude it from the tp_resume_conditional */
++	tp_resume_conditional(tp, device, removed_device);
+ }
+ 
+ static inline void
+diff --git a/test/test-lid.c b/test/test-lid.c
+index 4bf4c059..7e42f53d 100644
+--- a/test/test-lid.c
++++ b/test/test-lid.c
+@@ -342,6 +342,81 @@ START_TEST(lid_disable_touchpad_already_open)
+ }
+ END_TEST
+ 
++START_TEST(lid_dont_resume_disabled_touchpad)
++{
++	struct litest_device *sw = litest_current_device();
++	struct litest_device *touchpad;
++	struct libinput *li = sw->libinput;
++
++	touchpad = lid_init_paired_touchpad(li);
++	litest_disable_tap(touchpad->libinput_device);
++	libinput_device_config_send_events_set_mode(touchpad->libinput_device,
++						    LIBINPUT_CONFIG_SEND_EVENTS_DISABLED);
++	litest_drain_events(li);
++
++	/* switch is on - no events */
++	litest_lid_action(sw, LIBINPUT_SWITCH_STATE_ON);
++	litest_assert_only_typed_events(li, LIBINPUT_EVENT_SWITCH_TOGGLE);
++
++	litest_touch_down(touchpad, 0, 50, 50);
++	litest_touch_move_to(touchpad, 0, 50, 50, 70, 50, 10, 1);
++	litest_touch_up(touchpad, 0);
++	litest_assert_empty_queue(li);
++
++	/* switch is off - motion events */
++	litest_lid_action(sw, LIBINPUT_SWITCH_STATE_OFF);
++	litest_assert_only_typed_events(li, LIBINPUT_EVENT_SWITCH_TOGGLE);
++
++	litest_touch_down(touchpad, 0, 50, 50);
++	litest_touch_move_to(touchpad, 0, 50, 50, 70, 50, 10, 1);
++	litest_touch_up(touchpad, 0);
++	litest_assert_empty_queue(li);
++
++	litest_delete_device(touchpad);
++}
++END_TEST
++
++START_TEST(lid_dont_resume_disabled_touchpad_external_mouse)
++{
++	struct litest_device *sw = litest_current_device();
++	struct litest_device *touchpad, *mouse;
++	struct libinput *li = sw->libinput;
++
++	touchpad = lid_init_paired_touchpad(li);
++	mouse = litest_add_device(li, LITEST_MOUSE);
++	litest_disable_tap(touchpad->libinput_device);
++	libinput_device_config_send_events_set_mode(touchpad->libinput_device,
++						    LIBINPUT_CONFIG_SEND_EVENTS_DISABLED_ON_EXTERNAL_MOUSE);
++	litest_drain_events(li);
++
++	litest_touch_down(touchpad, 0, 50, 50);
++	litest_touch_move_to(touchpad, 0, 50, 50, 70, 50, 10, 1);
++	litest_touch_up(touchpad, 0);
++	litest_assert_empty_queue(li);
++
++	/* switch is on - no events */
++	litest_lid_action(sw, LIBINPUT_SWITCH_STATE_ON);
++	litest_assert_only_typed_events(li, LIBINPUT_EVENT_SWITCH_TOGGLE);
++
++	litest_touch_down(touchpad, 0, 50, 50);
++	litest_touch_move_to(touchpad, 0, 50, 50, 70, 50, 10, 1);
++	litest_touch_up(touchpad, 0);
++	litest_assert_empty_queue(li);
++
++	/* switch is off - motion events */
++	litest_lid_action(sw, LIBINPUT_SWITCH_STATE_OFF);
++	litest_assert_only_typed_events(li, LIBINPUT_EVENT_SWITCH_TOGGLE);
++
++	litest_touch_down(touchpad, 0, 50, 50);
++	litest_touch_move_to(touchpad, 0, 50, 50, 70, 50, 10, 1);
++	litest_touch_up(touchpad, 0);
++	litest_assert_empty_queue(li);
++
++	litest_delete_device(touchpad);
++	litest_delete_device(mouse);
++}
++END_TEST
++
+ START_TEST(lid_open_on_key)
+ {
+ 	struct litest_device *sw = litest_current_device();
+@@ -568,6 +643,9 @@ litest_setup_tests_lid(void)
+ 	litest_add("lid:disable_touchpad", lid_disable_touchpad_edge_scroll_interrupt, LITEST_SWITCH, LITEST_ANY);
+ 	litest_add("lid:disable_touchpad", lid_disable_touchpad_already_open, LITEST_SWITCH, LITEST_ANY);
+ 
++	litest_add("switch:touchpad", lid_dont_resume_disabled_touchpad, LITEST_SWITCH, LITEST_ANY);
++	litest_add("switch:touchpad", lid_dont_resume_disabled_touchpad_external_mouse, LITEST_SWITCH, LITEST_ANY);
++
+ 	litest_add("lid:keyboard", lid_open_on_key, LITEST_SWITCH, LITEST_ANY);
+ 	litest_add("lid:keyboard", lid_open_on_key_touchpad_enabled, LITEST_SWITCH, LITEST_ANY);
+ 
+-- 
+2.13.5
+
