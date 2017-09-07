@@ -4,8 +4,8 @@
 %global gitversion 58abea394
 
 Name:           libinput
-Version:        1.8.1
-Release:        4%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Version:        1.8.2
+Release:        1%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 License:        MIT
@@ -18,7 +18,6 @@ Source2:        commitid
 Source0:        http://www.freedesktop.org/software/libinput/libinput-%{version}.tar.xz
 %endif
 
-Patch01:        0001-gestures-don-t-try-to-pinch-for-nfingers-slots.patch
 Patch02:        0001-touchpad-don-t-resume-a-disabled-touchpad.patch
 
 BuildRequires:  git-core
@@ -106,6 +105,9 @@ git am -p1 %{patches} < /dev/null
 
 
 %changelog
+* Thu Sep 07 2017 Peter Hutterer <peter.hutterer@redhat.com> 1.8.2-1
+- libinput 1.8.2
+
 * Tue Sep 05 2017 Peter Hutterer <peter.hutterer@redhat.com> 1.8.1-4
 - Don't try pinching when the finger number exceeds available slots
 - Don't resume a disabled touchpad after a lid switch open (#1448962)
