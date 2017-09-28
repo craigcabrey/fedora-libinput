@@ -4,7 +4,7 @@
 %global gitversion 58abea394
 
 Name:           libinput
-Version:        1.8.2
+Version:        1.8.901
 Release:        1%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
@@ -17,8 +17,6 @@ Source2:        commitid
 %else
 Source0:        http://www.freedesktop.org/software/libinput/libinput-%{version}.tar.xz
 %endif
-
-Patch02:        0001-touchpad-don-t-resume-a-disabled-touchpad.patch
 
 BuildRequires:  git-core
 BuildRequires:  gcc
@@ -90,9 +88,15 @@ git am -p1 %{patches} < /dev/null
 %{_libexecdir}/libinput/libinput-list-devices
 %{_libexecdir}/libinput/libinput-measure
 %{_libexecdir}/libinput/libinput-measure-touchpad-tap
+%{_libexecdir}/libinput/libinput-measure-touch-size
+%{_libexecdir}/libinput/libinput-measure-touchpad-pressure
+%{_libexecdir}/libinput/libinput-measure-trackpoint-range
 %{_mandir}/man1/libinput.1*
 %{_mandir}/man1/libinput-measure.1*
 %{_mandir}/man1/libinput-measure-touchpad-tap.1*
+%{_mandir}/man1/libinput-measure-touch-size.1.gz
+%{_mandir}/man1/libinput-measure-touchpad-pressure.1.gz
+%{_mandir}/man1/libinput-measure-trackpoint-range.1.gz
 %{_mandir}/man1/libinput-list-devices.1*
 %{_mandir}/man1/libinput-debug-events.1*
 %{_bindir}/libinput-list-devices
@@ -105,6 +109,9 @@ git am -p1 %{patches} < /dev/null
 
 
 %changelog
+* Thu Sep 28 2017 Peter Hutterer <peter.hutterer@redhat.com> 1.8.901-1
+- libinput 1.9rc1
+
 * Thu Sep 07 2017 Peter Hutterer <peter.hutterer@redhat.com> 1.8.2-1
 - libinput 1.8.2
 
