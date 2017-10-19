@@ -4,7 +4,7 @@
 %global gitversion 58abea394
 
 Name:           libinput
-Version:        1.8.902
+Version:        1.9.0
 Release:        1%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
@@ -109,6 +109,9 @@ git am -p1 %{patches} < /dev/null
 
 
 %changelog
+* Thu Oct 19 2017 Peter Hutterer <peter.hutterer@redhat.com> 1.9.0-1
+- libinput 1.9.0
+
 * Tue Oct 10 2017 Peter Hutterer <peter.hutterer@redhat.com> 1.8.902-1
 - libinput 1.9rc2
 
