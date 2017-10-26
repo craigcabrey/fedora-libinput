@@ -5,7 +5,7 @@
 
 Name:           libinput
 Version:        1.9.0
-Release:        1%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Release:        2%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 License:        MIT
@@ -94,9 +94,9 @@ git am -p1 %{patches} < /dev/null
 %{_mandir}/man1/libinput.1*
 %{_mandir}/man1/libinput-measure.1*
 %{_mandir}/man1/libinput-measure-touchpad-tap.1*
-%{_mandir}/man1/libinput-measure-touch-size.1.gz
-%{_mandir}/man1/libinput-measure-touchpad-pressure.1.gz
-%{_mandir}/man1/libinput-measure-trackpoint-range.1.gz
+%{_mandir}/man1/libinput-measure-touch-size.1*
+%{_mandir}/man1/libinput-measure-touchpad-pressure.1*
+%{_mandir}/man1/libinput-measure-trackpoint-range.1*
 %{_mandir}/man1/libinput-list-devices.1*
 %{_mandir}/man1/libinput-debug-events.1*
 %{_bindir}/libinput-list-devices
@@ -109,6 +109,9 @@ git am -p1 %{patches} < /dev/null
 
 
 %changelog
+* Thu Oct 26 2017 Peter Hutterer <peter.hutterer@redhat.com> 1.9.0-2
+- Drop explicit .gz from the man pages
+
 * Thu Oct 19 2017 Peter Hutterer <peter.hutterer@redhat.com> 1.9.0-1
 - libinput 1.9.0
 
