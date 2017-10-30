@@ -4,8 +4,8 @@
 %global gitversion 58abea394
 
 Name:           libinput
-Version:        1.9.0
-Release:        2%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Version:        1.9.1
+Release:        1%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 License:        MIT
@@ -109,6 +109,9 @@ git am -p1 %{patches} < /dev/null
 
 
 %changelog
+* Mon Oct 30 2017 Peter Hutterer <peter.hutterer@redhat.com> 1.9.1-1
+- libinput 1.9.1
+
 * Thu Oct 26 2017 Peter Hutterer <peter.hutterer@redhat.com> 1.9.0-2
 - Drop explicit .gz from the man pages
 
