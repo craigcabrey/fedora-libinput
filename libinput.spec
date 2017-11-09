@@ -5,7 +5,7 @@
 
 Name:           libinput
 Version:        1.9.1
-Release:        1%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Release:        2%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 License:        MIT
@@ -17,6 +17,8 @@ Source2:        commitid
 %else
 Source0:        http://www.freedesktop.org/software/libinput/libinput-%{version}.tar.xz
 %endif
+
+Patch01:        0001-tools-when-the-command-isn-t-installed-print-that.patch
 
 BuildRequires:  git-core
 BuildRequires:  gcc
@@ -43,6 +45,14 @@ Requires:       %{name}%{?_isa} = %{version}-%{release}
 The %{name}-devel package contains libraries and header files for
 developing applications that use %{name}.
 
+%package        utils
+Summary:        Utilities and tools for debugging %{name}
+Requires:       %{name}%{?_isa} = %{version}-%{release}
+Requires:       python3-evdev python3-pyudev
+
+%description    utils
+The %{name}-utils package contains tools to debug hardware and analyze
+%{name}.
 
 %prep
 %setup -q -n %{name}-%{?gitdate:%{gitdate}}%{!?gitdate:%{version}}
@@ -86,17 +96,8 @@ git am -p1 %{patches} < /dev/null
 %dir %{_libexecdir}/libinput/
 %{_libexecdir}/libinput/libinput-debug-events
 %{_libexecdir}/libinput/libinput-list-devices
-%{_libexecdir}/libinput/libinput-measure
-%{_libexecdir}/libinput/libinput-measure-touchpad-tap
-%{_libexecdir}/libinput/libinput-measure-touch-size
-%{_libexecdir}/libinput/libinput-measure-touchpad-pressure
-%{_libexecdir}/libinput/libinput-measure-trackpoint-range
 %{_mandir}/man1/libinput.1*
-%{_mandir}/man1/libinput-measure.1*
-%{_mandir}/man1/libinput-measure-touchpad-tap.1*
-%{_mandir}/man1/libinput-measure-touch-size.1*
-%{_mandir}/man1/libinput-measure-touchpad-pressure.1*
-%{_mandir}/man1/libinput-measure-trackpoint-range.1*
+
 %{_mandir}/man1/libinput-list-devices.1*
 %{_mandir}/man1/libinput-debug-events.1*
 %{_bindir}/libinput-list-devices
@@ -107,8 +108,23 @@ git am -p1 %{patches} < /dev/null
 %{_libdir}/libinput.so
 %{_libdir}/pkgconfig/libinput.pc
 
+%files utils
+%{_libexecdir}/libinput/libinput-measure
+%{_libexecdir}/libinput/libinput-measure-touchpad-tap
+%{_libexecdir}/libinput/libinput-measure-touchpad-pressure
+%{_libexecdir}/libinput/libinput-measure-touch-size
+%{_libexecdir}/libinput/libinput-measure-trackpoint-range
+%{_mandir}/man1/libinput-measure.1*
+%{_mandir}/man1/libinput-measure-touchpad-tap.1*
+%{_mandir}/man1/libinput-measure-touch-size.1*
+%{_mandir}/man1/libinput-measure-touchpad-pressure.1*
+%{_mandir}/man1/libinput-measure-trackpoint-range.1*
 
 %changelog
+* Thu Nov 09 2017 Peter Hutterer <peter.hutterer@redhat.com> 1.9.1-2
+- Split some of the tools into a libinput-utils package so we can require
+  the various bits easier (#1509298)
+
 * Mon Oct 30 2017 Peter Hutterer <peter.hutterer@redhat.com> 1.9.1-1
 - libinput 1.9.1
 
