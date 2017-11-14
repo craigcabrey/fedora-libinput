@@ -1,0 +1,31 @@
+From 48fd22def7ae1a8d67d1f6f2e0d6e6f98c7a9361 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Stefan=20Br=C3=BCns?= <stefan.bruens@rwth-aachen.de>
+Date: Fri, 3 Nov 2017 23:01:23 +0100
+Subject: [PATCH libinput] tools: Handle LIBINPUT_SWITCH_TABLET_MODE
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Stefan Brüns <stefan.bruens@rwth-aachen.de>
+Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+---
+ tools/libinput-debug-events.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/tools/libinput-debug-events.c b/tools/libinput-debug-events.c
+index 87b7b803..fb8d84d8 100644
+--- a/tools/libinput-debug-events.c
++++ b/tools/libinput-debug-events.c
+@@ -747,6 +747,9 @@ print_switch_event(struct libinput_event *ev)
+ 	case LIBINPUT_SWITCH_LID:
+ 		which = "lid";
+ 		break;
++	case LIBINPUT_SWITCH_TABLET_MODE:
++		which = "tablet-mode";
++		break;
+ 	default:
+ 		abort();
+ 	}
+-- 
+2.13.6
+
