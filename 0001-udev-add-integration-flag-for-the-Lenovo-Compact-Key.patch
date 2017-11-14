@@ -1,0 +1,31 @@
+From c06660b314f5d9b284088d30770c1c40006d9ab0 Mon Sep 17 00:00:00 2001
+From: Peter Hutterer <peter.hutterer@who-t.net>
+Date: Tue, 14 Nov 2017 15:53:12 +1000
+Subject: [PATCH libinput] udev: add integration flag for the Lenovo Compact
+ Keyboard with TrackPoint
+
+From https://bugzilla.redhat.com/show_bug.cgi?id=1510814
+
+Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+---
+ udev/90-libinput-model-quirks.hwdb | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/udev/90-libinput-model-quirks.hwdb b/udev/90-libinput-model-quirks.hwdb
+index 820cb8db..c23ef833 100644
+--- a/udev/90-libinput-model-quirks.hwdb
++++ b/udev/90-libinput-model-quirks.hwdb
+@@ -204,6 +204,10 @@ libinput:name:SynPS/2 Synaptics TouchPad:dmi:*svnLENOVO:*:pvrThinkPadX1Carbon3rd
+  LIBINPUT_MODEL_LENOVO_T450_TOUCHPAD=1
+  LIBINPUT_ATTR_PALM_PRESSURE_THRESHOLD=150
+ 
++# Lenovo ThinkPad Compact USB Keyboard with TrackPoint
++libinput:keyboard:input:b0003v17EFp6047*
++ LIBINPUT_ATTR_KEYBOARD_INTEGRATION=external
++
+ ##########################################
+ # Logitech
+ ##########################################
+-- 
+2.13.6
+
