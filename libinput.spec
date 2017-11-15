@@ -4,8 +4,8 @@
 %global gitversion 58abea394
 
 Name:           libinput
-Version:        1.9.1
-Release:        4%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Version:        1.9.2
+Release:        1%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 License:        MIT
@@ -18,8 +18,6 @@ Source2:        commitid
 Source0:        http://www.freedesktop.org/software/libinput/libinput-%{version}.tar.xz
 %endif
 
-Patch01:        0001-tools-when-the-command-isn-t-installed-print-that.patch
-Patch02:        0001-tools-Handle-LIBINPUT_SWITCH_TABLET_MODE.patch
 Patch03:        0001-udev-add-integration-flag-for-the-Lenovo-Compact-Key.patch
 
 BuildRequires:  git-core
@@ -123,6 +121,9 @@ git am -p1 %{patches} < /dev/null
 %{_mandir}/man1/libinput-measure-trackpoint-range.1*
 
 %changelog
+* Wed Nov 15 2017 Peter Hutterer <peter.hutterer@redhat.com> 1.9.2-1
+- libinput 1.9.2
+
 * Wed Nov 15 2017 Peter Hutterer <peter.hutterer@redhat.com> 1.9.1-4
 - Mark the Lenovo Compact Keyboard as external (#1510814)
 
