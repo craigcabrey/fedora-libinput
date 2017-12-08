@@ -5,7 +5,7 @@
 
 Name:           libinput
 Version:        1.9.3
-Release:        1%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Release:        2%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 License:        MIT
@@ -19,6 +19,7 @@ Source0:        http://www.freedesktop.org/software/libinput/libinput-%{version}
 %endif
 
 Patch03:        0001-udev-add-integration-flag-for-the-Lenovo-Compact-Key.patch
+Patch04:        0001-fallback-send-key-events-out-immediately-upon-receiv.patch
 
 BuildRequires:  git-core
 BuildRequires:  gcc
@@ -121,6 +122,9 @@ git am -p1 %{patches} < /dev/null
 %{_mandir}/man1/libinput-measure-trackpoint-range.1*
 
 %changelog
+* Fri Dec 08 2017 Peter Hutterer <peter.hutterer@redhat.com> 1.9.3-2
+- Immediately post key events, don't wait for EV_SYN
+
 * Tue Nov 28 2017 Peter Hutterer <peter.hutterer@redhat.com> 1.9.3-1
 - libinput 1.9.3
 
