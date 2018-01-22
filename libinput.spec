@@ -4,7 +4,7 @@
 %global gitversion 58abea394
 
 Name:           libinput
-Version:        1.9.4
+Version:        1.9.901
 Release:        1%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
@@ -17,8 +17,6 @@ Source2:        commitid
 %else
 Source0:        http://www.freedesktop.org/software/libinput/libinput-%{version}.tar.xz
 %endif
-
-Patch03:        0001-udev-add-integration-flag-for-the-Lenovo-Compact-Key.patch
 
 BuildRequires:  git-core
 BuildRequires:  gcc
@@ -121,6 +119,9 @@ git am -p1 %{patches} < /dev/null
 %{_mandir}/man1/libinput-measure-trackpoint-range.1*
 
 %changelog
+* Mon Jan 22 2018 Peter Hutterer <peter.hutterer@redhat.com> 1.9.901-1
+- libinput 1.10rc1
+
 * Thu Dec 14 2017 Peter Hutterer <peter.hutterer@redhat.com> 1.9.4-1
 - libinput 1.9.4
 
