@@ -5,7 +5,7 @@
 
 Name:           libinput
 Version:        1.9.901
-Release:        1%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Release:        2%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 License:        MIT
@@ -53,17 +53,7 @@ The %{name}-utils package contains tools to debug hardware and analyze
 %{name}.
 
 %prep
-%setup -q -n %{name}-%{?gitdate:%{gitdate}}%{!?gitdate:%{version}}
-git init
-if [ -z "$GIT_COMMITTER_NAME" ]; then
-    git config user.email "x@fedoraproject.org"
-    git config user.name "Fedora X Ninjas"
-fi
-git add .
-git commit --allow-empty -a -q -m "%{version} baseline."
-
-# Apply all the patches.
-git am -p1 %{patches} < /dev/null
+%autosetup -S git
 
 %build
 %meson -Ddebug-gui=false \
@@ -119,6 +109,9 @@ git am -p1 %{patches} < /dev/null
 %{_mandir}/man1/libinput-measure-trackpoint-range.1*
 
 %changelog
+* Fri Feb 02 2018 Peter Hutterer <peter.hutterer@redhat.com> 1.9.901-2
+- Use autosetup instead of the manual git magic
+
 * Mon Jan 22 2018 Peter Hutterer <peter.hutterer@redhat.com> 1.9.901-1
 - libinput 1.10rc1
 
