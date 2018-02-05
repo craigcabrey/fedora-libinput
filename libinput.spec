@@ -5,7 +5,7 @@
 
 Name:           libinput
 Version:        1.9.901
-Release:        2%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Release:        3%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 License:        MIT
@@ -17,6 +17,8 @@ Source2:        commitid
 %else
 Source0:        http://www.freedesktop.org/software/libinput/libinput-%{version}.tar.xz
 %endif
+
+Patch01:        0001-tablet-don-t-set-rotation-on-a-tool-if-we-don-t-have.patch
 
 BuildRequires:  git-core
 BuildRequires:  gcc
@@ -109,6 +111,10 @@ The %{name}-utils package contains tools to debug hardware and analyze
 %{_mandir}/man1/libinput-measure-trackpoint-range.1*
 
 %changelog
+* Mon Feb 05 2018 Peter Hutterer <peter.hutterer@redhat.com> 1.9.901-3
+- Fix crasher on first event from tablets not supported by libwacom
+  (#1535755)
+
 * Fri Feb 02 2018 Peter Hutterer <peter.hutterer@redhat.com> 1.9.901-2
 - Use autosetup instead of the manual git magic
 
