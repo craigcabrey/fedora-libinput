@@ -4,8 +4,8 @@
 %global gitversion 58abea394
 
 Name:           libinput
-Version:        1.10.0
-Release:        2%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Version:        1.10.1
+Release:        1%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 License:        MIT
@@ -17,8 +17,6 @@ Source2:        commitid
 %else
 Source0:        http://www.freedesktop.org/software/libinput/libinput-%{version}.tar.xz
 %endif
-
-Patch01:        0001-evdev-fail-before-open_restricted-if-the-devnode-doe.patch
 
 BuildRequires:  git-core
 BuildRequires:  gcc
@@ -111,6 +109,9 @@ The %{name}-utils package contains tools to debug hardware and analyze
 %{_mandir}/man1/libinput-measure-trackpoint-range.1*
 
 %changelog
+* Wed Feb 28 2018 Peter Hutterer <peter.hutterer@redhat.com> 1.10.1-1
+- libinput 1.10.1
+
 * Tue Feb 13 2018 Peter Hutterer <peter.hutterer@redhat.com> 1.10.0-2
 - Fix crasher due to missing devnode after resume (#1536633)
 
