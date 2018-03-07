@@ -4,7 +4,7 @@
 %global gitversion 58abea394
 
 Name:           libinput
-Version:        1.10.1
+Version:        1.10.2
 Release:        2%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
@@ -17,10 +17,6 @@ Source2:        commitid
 %else
 Source0:        http://www.freedesktop.org/software/libinput/libinput-%{version}.tar.xz
 %endif
-
-Patch01:        0001-touchpad-move-the-hysteresis-into-its-own-substruct.patch
-Patch02:        0002-touchpad-remove-the-code-for-disabling-hysteresis.patch
-Patch03:        0003-touchpad-add-wobbling-detection.patch
 
 BuildRequires:  git-core
 BuildRequires:  gcc
@@ -113,6 +109,9 @@ The %{name}-utils package contains tools to debug hardware and analyze
 %{_mandir}/man1/libinput-measure-trackpoint-range.1*
 
 %changelog
+* Wed Mar 07 2018 Peter Hutterer <peter.hutterer@redhat.com> 1.10.2-2
+- libinput 1.10.2
+
 * Fri Mar 02 2018 Peter Hutterer <peter.hutterer@redhat.com> 1.10.1-2
 - Fix touchpad jitter by changing from "disable if no jitter" to "enable if
   jitter" (#1548550)
