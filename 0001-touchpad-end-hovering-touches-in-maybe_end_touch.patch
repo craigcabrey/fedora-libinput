@@ -1,0 +1,60 @@
+From 42e8813a632699e55f8287430f458ae6f5312146 Mon Sep 17 00:00:00 2001
+From: Peter Hutterer <peter.hutterer@who-t.net>
+Date: Mon, 12 Mar 2018 10:33:21 +1000
+Subject: [PATCH libinput] touchpad: end hovering touches in maybe_end_touch
+
+Otherwise a hovering touch stays around forever even after the finger has
+discontinued. This doesn't matter on slots, but for fake fingers the finger
+may suddenly end up being forced down/up as a result of the pressure changes
+on the real fingers.
+
+So when in maybe_end_touch, switch them back to NONE immediately - hovering
+touches do not need to trigger a TOUCH_END event.
+
+https://bugs.freedesktop.org/show_bug.cgi?id=105258
+
+Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+(cherry picked from commit d8db6b5927f61460b2991479a85056256c819485)
+---
+ src/evdev-mt-touchpad.c | 14 +++++++++-----
+ 1 file changed, 9 insertions(+), 5 deletions(-)
+
+diff --git a/src/evdev-mt-touchpad.c b/src/evdev-mt-touchpad.c
+index 3080e8a8..4ebadc25 100644
+--- a/src/evdev-mt-touchpad.c
++++ b/src/evdev-mt-touchpad.c
+@@ -345,22 +345,26 @@ tp_maybe_end_touch(struct tp_dispatch *tp,
+ 	switch (t->state) {
+ 	case TOUCH_NONE:
+ 	case TOUCH_MAYBE_END:
+-	case TOUCH_HOVERING:
+ 		return;
+ 	case TOUCH_END:
+ 		evdev_log_bug_libinput(tp->device,
+ 				       "touch  already in TOUCH_END\n");
+ 		return;
++	case TOUCH_HOVERING:
+ 	case TOUCH_BEGIN:
+ 	case TOUCH_UPDATE:
+ 		break;
+ 	}
+ 
+-	t->dirty = true;
+-	t->state = TOUCH_MAYBE_END;
++	if (t->state != TOUCH_HOVERING) {
++		assert(tp->nfingers_down >= 1);
++		tp->nfingers_down--;
++		t->state = TOUCH_MAYBE_END;
++	} else {
++		t->state = TOUCH_NONE;
++	}
+ 
+-	assert(tp->nfingers_down >= 1);
+-	tp->nfingers_down--;
++	t->dirty = true;
+ }
+ 
+ /**
+-- 
+2.14.3
+
