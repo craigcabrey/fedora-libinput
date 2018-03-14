@@ -4,8 +4,8 @@
 %global gitversion 58abea394
 
 Name:           libinput
-Version:        1.10.2
-Release:        4%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Version:        1.10.3
+Release:        1%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 License:        MIT
@@ -17,8 +17,6 @@ Source2:        commitid
 %else
 Source0:        http://www.freedesktop.org/software/libinput/libinput-%{version}.tar.xz
 %endif
-
-Patch01:        0001-touchpad-end-hovering-touches-in-maybe_end_touch.patch
 
 BuildRequires:  git-core
 BuildRequires:  gcc gcc-c++
@@ -111,6 +109,9 @@ The %{name}-utils package contains tools to debug hardware and analyze
 %{_mandir}/man1/libinput-measure-trackpoint-range.1*
 
 %changelog
+* Wed Mar 14 2018 Peter Hutterer <peter.hutterer@redhat.com> 1.10.3-1
+- libinput 1.10.3
+
 * Mon Mar 12 2018 Peter Hutterer <peter.hutterer@redhat.com> 1.10.2-4
 - Fix occasional crashes on gestures when libinput loses track of hovering
   fake fingers
