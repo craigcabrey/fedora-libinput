@@ -4,7 +4,7 @@
 %global gitversion 58abea394
 
 Name:           libinput
-Version:        1.10.3
+Version:        1.10.4
 Release:        1%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
@@ -109,6 +109,9 @@ The %{name}-utils package contains tools to debug hardware and analyze
 %{_mandir}/man1/libinput-measure-trackpoint-range.1*
 
 %changelog
+* Mon Apr 09 2018 Peter Hutterer <peter.hutterer@redhat.com> 1.10.4-1
+- libinput 1.10.4
+
 * Wed Mar 14 2018 Peter Hutterer <peter.hutterer@redhat.com> 1.10.3-1
 - libinput 1.10.3
 
