@@ -1,0 +1,78 @@
+From 0ae123afac8abffd843efcc899ef4519611f1ee2 Mon Sep 17 00:00:00 2001
+From: Peter Hutterer <peter.hutterer@who-t.net>
+Date: Thu, 19 Apr 2018 11:00:51 +1000
+Subject: [PATCH libinput] evdev: disable ABS_MT_TOOL_PALM on the Lenovo X1
+ Carbon 6th gen
+
+This device randomly decides that a touch is now a palm, based on
+the moon phase, the user's starsign and possibly what the dog had for
+breakfast. Since libinput assumes that a touchpad that labels a touch as palm
+has reasons to do so, let's unassume this for this device by disabling that
+axis altogether and relying on the touch pressure only.
+
+https://bugzilla.redhat.com/show_bug.cgi?id=1565692
+
+Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+(cherry picked from commit 762c1726f1b633d46ce0415a43fcee93453b8b7a)
+---
+ src/evdev.c                        | 8 ++++++++
+ src/evdev.h                        | 1 +
+ udev/90-libinput-model-quirks.hwdb | 4 ++++
+ 3 files changed, 13 insertions(+)
+
+diff --git a/src/evdev.c b/src/evdev.c
+index b98dc32d..8dbf12c6 100644
+--- a/src/evdev.c
++++ b/src/evdev.c
+@@ -1265,6 +1265,7 @@ evdev_read_model_flags(struct evdev_device *device)
+ 		MODEL(LOGITECH_MARBLE_MOUSE),
+ 		MODEL(TABLET_NO_PROXIMITY_OUT),
+ 		MODEL(MS_NANO_TRANSCEIVER),
++		MODEL(LENOVO_CARBON_X1_6TH),
+ #undef MODEL
+ 		{ "ID_INPUT_TRACKBALL", EVDEV_MODEL_TRACKBALL },
+ 		{ NULL, EVDEV_MODEL_DEFAULT },
+@@ -1861,6 +1862,13 @@ evdev_pre_configure_model_quirks(struct evdev_device *device)
+ 	/* Logitech Marble Mouse claims to have a middle button */
+ 	if (device->model_flags & EVDEV_MODEL_LOGITECH_MARBLE_MOUSE)
+ 		libevdev_disable_event_code(device->evdev, EV_KEY, BTN_MIDDLE);
++
++	/* Lenovo Carbon X1 6th gen sends bogus ABS_MT_TOOL_TYPE events for
++	 * MT_TOOL_PALM */
++	if (device->model_flags & EVDEV_MODEL_LENOVO_CARBON_X1_6TH)
++		libevdev_disable_event_code(device->evdev,
++					    EV_ABS,
++					    ABS_MT_TOOL_TYPE);
+ }
+ 
+ static void
+diff --git a/src/evdev.h b/src/evdev.h
+index 060020f9..07941c3d 100644
+--- a/src/evdev.h
++++ b/src/evdev.h
+@@ -111,6 +111,7 @@ enum evdev_device_model {
+ 	EVDEV_MODEL_SYNAPTICS_SERIAL_TOUCHPAD = (1 << 9),
+ 	EVDEV_MODEL_JUMPING_SEMI_MT = (1 << 10),
+ 	EVDEV_MODEL_LENOVO_X220_TOUCHPAD_FW81 = (1 << 12),
++	EVDEV_MODEL_LENOVO_CARBON_X1_6TH = (1 << 13),
+ 	EVDEV_MODEL_CYBORG_RAT = (1 << 14),
+ 	EVDEV_MODEL_HP_STREAM11_TOUCHPAD = (1 << 16),
+ 	EVDEV_MODEL_LENOVO_T450_TOUCHPAD= (1 << 17),
+diff --git a/udev/90-libinput-model-quirks.hwdb b/udev/90-libinput-model-quirks.hwdb
+index 20975aec..060018b0 100644
+--- a/udev/90-libinput-model-quirks.hwdb
++++ b/udev/90-libinput-model-quirks.hwdb
+@@ -210,6 +210,10 @@ libinput:name:SynPS/2 Synaptics TouchPad:dmi:*svnLENOVO:*:pvrThinkPadX1Carbon3rd
+ libinput:keyboard:input:b0003v17EFp6047*
+  LIBINPUT_ATTR_KEYBOARD_INTEGRATION=external
+ 
++# Lenovo Carbon X1 6th gen (RMI4 only, PS/2 is broken on this device)
++libinput:name:Synaptics TM3288-010:dmi:*svnLenovo:*pvrThinkPadX1Carbon6th:*
++ LIBINPUT_MODEL_LENOVO_CARBON_X1_6TH=1
++
+ ##########################################
+ # Logitech
+ ##########################################
+-- 
+2.14.3
+
