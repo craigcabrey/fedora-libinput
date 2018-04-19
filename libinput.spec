@@ -4,8 +4,8 @@
 %global gitversion 58abea394
 
 Name:           libinput
-Version:        1.10.4
-Release:        2%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Version:        1.10.5
+Release:        1%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 License:        MIT
@@ -111,6 +111,9 @@ The %{name}-utils package contains tools to debug hardware and analyze
 %{_mandir}/man1/libinput-measure-trackpoint-range.1*
 
 %changelog
+* Thu Apr 19 2018 Peter Hutterer <peter.hutterer@redhat.com> 1.10.5-1
+- libinput 1.10.5
+
 * Thu Apr 19 2018 Peter Hutterer <peter.hutterer@redhat.com> 1.10.4-2
 - Disable ABS_MT_TOOL_PALM on the Lenovo Carbon X1 6th (#1565692)
 
