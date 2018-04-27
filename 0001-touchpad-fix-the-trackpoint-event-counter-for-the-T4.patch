@@ -1,4 +1,4 @@
-From d19f775c26223b2482c38c66d73969cfb6556ff9 Mon Sep 17 00:00:00 2001
+From 4172888e91281df81b226920a28117d24ee57266 Mon Sep 17 00:00:00 2001
 From: Peter Hutterer <peter.hutterer@who-t.net>
 Date: Fri, 27 Apr 2018 14:40:57 +1000
 Subject: [PATCH libinput] touchpad: fix the trackpoint event counter for the
@@ -15,17 +15,25 @@ Fix this by always setting the timeout and resetting the event counter if no
 activity happened.
 
 Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
-(cherry picked from commit 3b019959c2b33de05c5aa073730300e6897b4268)
+(cherry picked from commit c0fd857def5547f612d2c14ae57dda1cef47a92c)
 ---
- src/evdev-mt-touchpad.c | 11 +++++++----
+ src/evdev-mt-touchpad.c | 13 ++++++++++---
  test/test-trackpoint.c  | 30 ++++++++++++++++++++++++++++++
- 2 files changed, 37 insertions(+), 4 deletions(-)
+ 2 files changed, 40 insertions(+), 3 deletions(-)
 
 diff --git a/src/evdev-mt-touchpad.c b/src/evdev-mt-touchpad.c
-index cc01976a..953b475d 100644
+index cc01976a..25520526 100644
 --- a/src/evdev-mt-touchpad.c
 +++ b/src/evdev-mt-touchpad.c
-@@ -1912,8 +1912,10 @@ tp_trackpoint_timeout(uint64_t now, void *data)
+@@ -31,6 +31,7 @@
+ #include "evdev-mt-touchpad.h"
+ 
+ #define DEFAULT_TRACKPOINT_ACTIVITY_TIMEOUT ms2us(300)
++#define DEFAULT_TRACKPOINT_EVENT_TIMEOUT ms2us(40)
+ #define DEFAULT_KEYBOARD_ACTIVITY_TIMEOUT_1 ms2us(200)
+ #define DEFAULT_KEYBOARD_ACTIVITY_TIMEOUT_2 ms2us(500)
+ #define THUMB_MOVE_TIMEOUT ms2us(300)
+@@ -1912,8 +1913,10 @@ tp_trackpoint_timeout(uint64_t now, void *data)
  {
  	struct tp_dispatch *tp = data;
  
@@ -38,25 +46,21 @@ index cc01976a..953b475d 100644
  	tp->palm.trackpoint_event_count = 0;
  }
  
-@@ -1930,6 +1932,9 @@ tp_trackpoint_event(uint64_t time, struct libinput_event *event, void *data)
+@@ -1930,9 +1933,13 @@ tp_trackpoint_event(uint64_t time, struct libinput_event *event, void *data)
  	tp->palm.trackpoint_last_event_time = time;
  	tp->palm.trackpoint_event_count++;
  
-+	libinput_timer_set(&tp->palm.trackpoint_timer,
-+			   time + DEFAULT_TRACKPOINT_ACTIVITY_TIMEOUT);
 +
  	/* Require at least three events before enabling palm detection */
- 	if (tp->palm.trackpoint_event_count < 3)
+-	if (tp->palm.trackpoint_event_count < 3)
++	if (tp->palm.trackpoint_event_count < 3) {
++		libinput_timer_set(&tp->palm.trackpoint_timer,
++				   time + DEFAULT_TRACKPOINT_EVENT_TIMEOUT);
  		return;
-@@ -1939,8 +1944,6 @@ tp_trackpoint_event(uint64_t time, struct libinput_event *event, void *data)
- 		tp->palm.trackpoint_active = true;
- 	}
++	}
  
--	libinput_timer_set(&tp->palm.trackpoint_timer,
--			   time + DEFAULT_TRACKPOINT_ACTIVITY_TIMEOUT);
- }
- 
- static void
+ 	if (!tp->palm.trackpoint_active) {
+ 		tp_stop_actions(tp, time);
 diff --git a/test/test-trackpoint.c b/test/test-trackpoint.c
 index 46a66893..5cca9bc9 100644
 --- a/test/test-trackpoint.c
