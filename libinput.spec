@@ -5,7 +5,7 @@
 
 Name:           libinput
 Version:        1.10.5
-Release:        1%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Release:        2%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 License:        MIT
@@ -19,6 +19,7 @@ Source0:        http://www.freedesktop.org/software/libinput/libinput-%{version}
 %endif
 
 Patch01:        0001-evdev-disable-ABS_MT_TOOL_PALM-on-the-Lenovo-X1-Carb.patch
+Patch02:        0001-touchpad-fix-the-trackpoint-event-counter-for-the-T4.patch
 
 BuildRequires:  git-core
 BuildRequires:  gcc gcc-c++
@@ -111,6 +112,9 @@ The %{name}-utils package contains tools to debug hardware and analyze
 %{_mandir}/man1/libinput-measure-trackpoint-range.1*
 
 %changelog
+* Fri Apr 27 2018 Peter Hutterer <peter.hutterer@redhat.com> 1.10.5-2
+- Fix the T460s halting cursor problem (#1572394)
+
 * Thu Apr 19 2018 Peter Hutterer <peter.hutterer@redhat.com> 1.10.5-1
 - libinput 1.10.5
 

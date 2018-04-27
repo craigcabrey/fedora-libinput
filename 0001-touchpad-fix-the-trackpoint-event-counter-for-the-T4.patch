@@ -1,0 +1,108 @@
+From d19f775c26223b2482c38c66d73969cfb6556ff9 Mon Sep 17 00:00:00 2001
+From: Peter Hutterer <peter.hutterer@who-t.net>
+Date: Fri, 27 Apr 2018 14:40:57 +1000
+Subject: [PATCH libinput] touchpad: fix the trackpoint event counter for the
+ T460s
+
+Introduced in 416fa44d80b0f2c53b652ddfa35dd4a156a65c65 but there was a logic
+error: we claimed to require 3 events from a trackpoint before stopping the
+touchpad but the timer was only set when we actually stopped the touchpad. So
+if a trackpoint sends a single event every second, we'd disable the touchpad
+after 3 seconds for the duration of the timeout, then again 3 seconds later,
+etc.
+
+Fix this by always setting the timeout and resetting the event counter if no
+activity happened.
+
+Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+(cherry picked from commit 3b019959c2b33de05c5aa073730300e6897b4268)
+---
+ src/evdev-mt-touchpad.c | 11 +++++++----
+ test/test-trackpoint.c  | 30 ++++++++++++++++++++++++++++++
+ 2 files changed, 37 insertions(+), 4 deletions(-)
+
+diff --git a/src/evdev-mt-touchpad.c b/src/evdev-mt-touchpad.c
+index cc01976a..953b475d 100644
+--- a/src/evdev-mt-touchpad.c
++++ b/src/evdev-mt-touchpad.c
+@@ -1912,8 +1912,10 @@ tp_trackpoint_timeout(uint64_t now, void *data)
+ {
+ 	struct tp_dispatch *tp = data;
+ 
+-	tp_tap_resume(tp, now);
+-	tp->palm.trackpoint_active = false;
++	if (tp->palm.trackpoint_active) {
++		tp_tap_resume(tp, now);
++		tp->palm.trackpoint_active = false;
++	}
+ 	tp->palm.trackpoint_event_count = 0;
+ }
+ 
+@@ -1930,6 +1932,9 @@ tp_trackpoint_event(uint64_t time, struct libinput_event *event, void *data)
+ 	tp->palm.trackpoint_last_event_time = time;
+ 	tp->palm.trackpoint_event_count++;
+ 
++	libinput_timer_set(&tp->palm.trackpoint_timer,
++			   time + DEFAULT_TRACKPOINT_ACTIVITY_TIMEOUT);
++
+ 	/* Require at least three events before enabling palm detection */
+ 	if (tp->palm.trackpoint_event_count < 3)
+ 		return;
+@@ -1939,8 +1944,6 @@ tp_trackpoint_event(uint64_t time, struct libinput_event *event, void *data)
+ 		tp->palm.trackpoint_active = true;
+ 	}
+ 
+-	libinput_timer_set(&tp->palm.trackpoint_timer,
+-			   time + DEFAULT_TRACKPOINT_ACTIVITY_TIMEOUT);
+ }
+ 
+ static void
+diff --git a/test/test-trackpoint.c b/test/test-trackpoint.c
+index 46a66893..5cca9bc9 100644
+--- a/test/test-trackpoint.c
++++ b/test/test-trackpoint.c
+@@ -379,6 +379,35 @@ START_TEST(trackpoint_palmdetect_require_min_events)
+ }
+ END_TEST
+ 
++START_TEST(trackpoint_palmdetect_require_min_events_timeout)
++{
++	struct litest_device *trackpoint = litest_current_device();
++	struct litest_device *touchpad;
++	struct libinput *li = trackpoint->libinput;
++
++	touchpad = litest_add_device(li, LITEST_SYNAPTICS_I2C);
++	litest_drain_events(li);
++
++	for (int i = 0; i < 10; i++) {
++		/* A single event does not trigger palm detection */
++		litest_event(trackpoint, EV_REL, REL_X, 1);
++		litest_event(trackpoint, EV_REL, REL_Y, 1);
++		litest_event(trackpoint, EV_SYN, SYN_REPORT, 0);
++		libinput_dispatch(li);
++		litest_drain_events(li);
++
++		litest_touch_down(touchpad, 0, 30, 30);
++		litest_touch_move_to(touchpad, 0, 30, 30, 80, 80, 10, 1);
++		litest_touch_up(touchpad, 0);
++		litest_assert_only_typed_events(li, LIBINPUT_EVENT_POINTER_MOTION);
++
++		litest_timeout_trackpoint();
++	}
++
++	litest_delete_device(touchpad);
++}
++END_TEST
++
+ void
+ litest_setup_tests_trackpoint(void)
+ {
+@@ -393,4 +422,5 @@ litest_setup_tests_trackpoint(void)
+ 	litest_add("trackpoint:palmdetect", trackpoint_palmdetect, LITEST_POINTINGSTICK, LITEST_ANY);
+ 	litest_add("trackpoint:palmdetect", trackpoint_palmdetect_resume_touch, LITEST_POINTINGSTICK, LITEST_ANY);
+ 	litest_add("trackpoint:palmdetect", trackpoint_palmdetect_require_min_events, LITEST_POINTINGSTICK, LITEST_ANY);
++	litest_add("trackpoint:palmdetect", trackpoint_palmdetect_require_min_events_timeout, LITEST_POINTINGSTICK, LITEST_ANY);
+ }
+-- 
+2.14.3
+
