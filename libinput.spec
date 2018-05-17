@@ -4,8 +4,8 @@
 %global gitversion 58abea394
 
 Name:           libinput
-Version:        1.10.6
-Release:        2%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Version:        1.10.7
+Release:        1%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 License:        MIT
@@ -17,10 +17,6 @@ Source2:        commitid
 %else
 Source0:        http://www.freedesktop.org/software/libinput/libinput-%{version}.tar.xz
 %endif
-
-Patch02:        0001-touchpad-fix-the-trackpoint-event-counter-for-the-T4.patch
-Patch03:        0001-util-allow-for-palm-pressure-255.patch
-Patch04:        0001-Add-quirk-to-fix-spurious-palm-detections-on-MacBook.patch
 
 BuildRequires:  git-core
 BuildRequires:  gcc gcc-c++
@@ -113,6 +109,9 @@ The %{name}-utils package contains tools to debug hardware and analyze
 %{_mandir}/man1/libinput-measure-trackpoint-range.1*
 
 %changelog
+* Thu May 17 2018 Peter Hutterer <peter.hutterer@redhat.com> 1.10.7-2
+- libinput 1.10.7
+
 * Mon May 14 2018 Peter Hutterer <peter.hutterer@redhat.com> 1.10.6-2
 - Fix palm threshold on MacBookPro5,5 (#1575260)
 
