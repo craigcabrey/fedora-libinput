@@ -4,7 +4,7 @@
 %global gitversion 58abea394
 
 Name:           libinput
-Version:        1.10.7
+Version:        1.10.901
 Release:        1%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
@@ -88,8 +88,6 @@ The %{name}-utils package contains tools to debug hardware and analyze
 
 %{_mandir}/man1/libinput-list-devices.1*
 %{_mandir}/man1/libinput-debug-events.1*
-%{_bindir}/libinput-list-devices
-%{_bindir}/libinput-debug-events
 
 %files devel
 %{_includedir}/libinput.h
@@ -98,17 +96,26 @@ The %{name}-utils package contains tools to debug hardware and analyze
 
 %files utils
 %{_libexecdir}/libinput/libinput-measure
+%{_libexecdir}/libinput/libinput-measure-fuzz
 %{_libexecdir}/libinput/libinput-measure-touchpad-tap
 %{_libexecdir}/libinput/libinput-measure-touchpad-pressure
 %{_libexecdir}/libinput/libinput-measure-touch-size
 %{_libexecdir}/libinput/libinput-measure-trackpoint-range
+%{_libexecdir}/libinput/libinput-record
+%{_libexecdir}/libinput/libinput-replay
 %{_mandir}/man1/libinput-measure.1*
+%{_mandir}/man1/libinput-measure-fuzz.1*
 %{_mandir}/man1/libinput-measure-touchpad-tap.1*
 %{_mandir}/man1/libinput-measure-touch-size.1*
 %{_mandir}/man1/libinput-measure-touchpad-pressure.1*
 %{_mandir}/man1/libinput-measure-trackpoint-range.1*
+%{_mandir}/man1/libinput-record.1*
+%{_mandir}/man1/libinput-replay.1*
 
 %changelog
+* Tue May 22 2018 Peter Hutterer <peter.hutterer@redhat.com> 1.10.901-1
+- libinput 1.11 rc1
+
 * Thu May 17 2018 Peter Hutterer <peter.hutterer@redhat.com> 1.10.7-2
 - libinput 1.10.7
 
