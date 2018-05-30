@@ -4,7 +4,7 @@
 %global gitversion 58abea394
 
 Name:           libinput
-Version:        1.10.901
+Version:        1.10.902
 Release:        1%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
@@ -113,6 +113,9 @@ The %{name}-utils package contains tools to debug hardware and analyze
 %{_mandir}/man1/libinput-replay.1*
 
 %changelog
+* Wed May 30 2018 Peter Hutterer <peter.hutterer@redhat.com> 1.10.902-1
+- libinput 1.11 rc2
+
 * Tue May 22 2018 Peter Hutterer <peter.hutterer@redhat.com> 1.10.901-1
 - libinput 1.11 rc1
 
