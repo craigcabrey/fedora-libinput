@@ -1,0 +1,55 @@
+From 4b9050a0c18ea679bd8ca85ec92c9090b01974ca Mon Sep 17 00:00:00 2001
+From: Peter Hutterer <peter.hutterer@who-t.net>
+Date: Fri, 1 Jun 2018 11:19:49 +1000
+Subject: [PATCH libinput] Revert "udev: copy the trackpoint sensitivity
+ directly from sysfs"
+
+The lenovo compact keyboard with trackpoint has a sensitivity of 5, which
+causes the trackpoint range to be 0.
+
+https://bugzilla.redhat.com/show_bug.cgi?id=1583324
+
+This reverts commit a4036a33ca6ca8da7d2417cac6b840a89b295e5f.
+---
+ src/evdev.c                            | 4 ++--
+ udev/90-libinput-model-quirks.rules.in | 4 ----
+ 2 files changed, 2 insertions(+), 6 deletions(-)
+
+diff --git a/src/evdev.c b/src/evdev.c
+index 1ac5b4f0..4da80a1f 100644
+--- a/src/evdev.c
++++ b/src/evdev.c
+@@ -1194,7 +1194,7 @@ evdev_get_trackpoint_range(struct evdev_device *device)
+ 		       HTTP_DOC_LINK);
+ 
+ 	prop = udev_device_get_property_value(device->udev_device,
+-					      "LIBINPUT_ATTR_TRACKPOINT_SENSITIVITY");
++					      "POINTINGSTICK_SENSITIVITY");
+ 	if (prop) {
+ 		int sensitivity;
+ 
+@@ -1210,7 +1210,7 @@ evdev_get_trackpoint_range(struct evdev_device *device)
+ 			sensitivity/DEFAULT_TRACKPOINT_SENSITIVITY;
+ 
+ 		evdev_log_debug(device,
+-				"trackpoint sensitivity is %d\n",
++				"trackpoint udev sensitivity is %d\n",
+ 				sensitivity);
+ 	}
+ 
+diff --git a/udev/90-libinput-model-quirks.rules.in b/udev/90-libinput-model-quirks.rules.in
+index cab8dcda..75d5b368 100644
+--- a/udev/90-libinput-model-quirks.rules.in
++++ b/udev/90-libinput-model-quirks.rules.in
+@@ -39,8 +39,4 @@ KERNELS=="input*", \
+ KERNELS=="input*", \
+   IMPORT{builtin}="hwdb 'libinput:name:$attr{name}:dt:$attr{[devicetree/base]model}'"
+ 
+-ENV{ID_INPUT_POINTINGSTICK}=="1", \
+-  ATTRS{sensitivity}=="?*", \
+-  ENV{LIBINPUT_ATTR_TRACKPOINT_SENSITIVITY}="$attr{sensitivity}"
+-
+ LABEL="libinput_model_quirks_end"
+-- 
+2.14.3
+
