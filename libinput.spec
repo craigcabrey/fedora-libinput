@@ -4,8 +4,8 @@
 %global gitversion 58abea394
 
 Name:           libinput
-Version:        1.10.902
-Release:        2%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Version:        1.11.0
+Release:        1%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 License:        MIT
@@ -17,9 +17,6 @@ Source2:        commitid
 %else
 Source0:        http://www.freedesktop.org/software/libinput/libinput-%{version}.tar.xz
 %endif
-
-# https://bugzilla.redhat.com/show_bug.cgi?id=1583324
-Patch01:        0001-Revert-udev-copy-the-trackpoint-sensitivity-directly.patch
 
 BuildRequires:  git-core
 BuildRequires:  gcc gcc-c++
@@ -116,6 +113,9 @@ The %{name}-utils package contains tools to debug hardware and analyze
 %{_mandir}/man1/libinput-replay.1*
 
 %changelog
+* Tue Jun 05 2018 Peter Hutterer <peter.hutterer@redhat.com> 1.11.0-1
+- libinput 1.11.0
+
 * Fri Jun 01 2018 Peter Hutterer <peter.hutterer@redhat.com> 1.10.902-2
 - Revert direct sensitivity attribute reading (#1583324)
 
