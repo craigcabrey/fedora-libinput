@@ -5,7 +5,7 @@
 
 Name:           libinput
 Version:        1.11.2
-Release:        1%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Release:        2%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 License:        MIT
@@ -25,6 +25,7 @@ BuildRequires:  pkgconfig(libudev)
 BuildRequires:  pkgconfig(mtdev) >= 1.1.0
 BuildRequires:  pkgconfig(libevdev) >= 0.4
 BuildRequires:  pkgconfig(libwacom) >= 0.20
+BuildRequires:  python3-devel
 
 %description
 libinput is a library that handles input devices for display servers and other
@@ -54,6 +55,8 @@ The %{name}-utils package contains tools to debug hardware and analyze
 
 %prep
 %autosetup -S git
+# Replace whatever the source uses with the approved call
+pathfix.py -i %{__python3} -p -n $(git grep -l  '#!/usr/bin/.*python3')
 
 %build
 %meson -Ddebug-gui=false \
@@ -113,6 +116,9 @@ The %{name}-utils package contains tools to debug hardware and analyze
 %{_mandir}/man1/libinput-replay.1*
 
 %changelog
+* Fri Jul 06 2018 Peter Hutterer <peter.hutterer@redhat.com> 1.11.2-2
+- Replace all python3 calls with the rpm macro
+
 * Tue Jul 03 2018 Peter Hutterer <peter.hutterer@redhat.com> 1.11.2-1
 - libinput 1.11.2
 
