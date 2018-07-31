@@ -4,7 +4,7 @@
 %global gitversion 58abea394
 
 Name:           libinput
-Version:        1.11.3
+Version:        1.11.901
 Release:        1%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
@@ -17,6 +17,8 @@ Source2:        commitid
 %else
 Source0:        http://www.freedesktop.org/software/libinput/libinput-%{version}.tar.xz
 %endif
+
+Patch01:        0001-meson.build-fix-name-of-the-measure-touchpad-tap-scr.patch
 
 BuildRequires:  git-core
 BuildRequires:  gcc gcc-c++
@@ -81,13 +83,12 @@ pathfix.py -i %{__python3} -p -n $(git grep -l  '#!/usr/bin/.*python3')
 %{udevdir}/libinput-device-group
 %{udevdir}/libinput-model-quirks
 %{udevdir}/rules.d/80-libinput-device-groups.rules
-%{udevdir}/rules.d/90-libinput-model-quirks.rules
-%{udevdir}/hwdb.d/90-libinput-model-quirks.hwdb
 %{_bindir}/libinput
 %dir %{_libexecdir}/libinput/
 %{_libexecdir}/libinput/libinput-debug-events
 %{_libexecdir}/libinput/libinput-list-devices
 %{_mandir}/man1/libinput.1*
+%{_datadir}/libinput/*.quirks
 
 %{_mandir}/man1/libinput-list-devices.1*
 %{_mandir}/man1/libinput-debug-events.1*
@@ -104,6 +105,7 @@ pathfix.py -i %{__python3} -p -n $(git grep -l  '#!/usr/bin/.*python3')
 %{_libexecdir}/libinput/libinput-measure-touchpad-pressure
 %{_libexecdir}/libinput/libinput-measure-touch-size
 %{_libexecdir}/libinput/libinput-measure-trackpoint-range
+%{_libexecdir}/libinput/libinput-quirks
 %{_libexecdir}/libinput/libinput-record
 %{_libexecdir}/libinput/libinput-replay
 %{_mandir}/man1/libinput-measure.1*
@@ -112,10 +114,16 @@ pathfix.py -i %{__python3} -p -n $(git grep -l  '#!/usr/bin/.*python3')
 %{_mandir}/man1/libinput-measure-touch-size.1*
 %{_mandir}/man1/libinput-measure-touchpad-pressure.1*
 %{_mandir}/man1/libinput-measure-trackpoint-range.1*
+%{_mandir}/man1/libinput-quirks.1*
+%{_mandir}/man1/libinput-quirks-list.1*
+%{_mandir}/man1/libinput-quirks-validate.1*
 %{_mandir}/man1/libinput-record.1*
 %{_mandir}/man1/libinput-replay.1*
 
 %changelog
+* Tue Jul 31 2018 Peter Hutterer <peter.hutterer@redhat.com> 1.11.901-1
+- libinput 1.12rc1
+
 * Wed Jul 25 2018 Peter Hutterer <peter.hutterer@redhat.com> 1.11.3-1
 - libinput 1.11.3
 

@@ -1,0 +1,27 @@
+From 22faa97f25136981828fae7f99bbc1933d42afc1 Mon Sep 17 00:00:00 2001
+From: Peter Hutterer <peter.hutterer@who-t.net>
+Date: Tue, 31 Jul 2018 13:00:38 +1000
+Subject: [PATCH libinput] meson.build: fix name of the measure touchpad-tap
+ script
+
+Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+---
+ meson.build | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/meson.build b/meson.build
+index 74b88548..6f04e4d3 100644
+--- a/meson.build
++++ b/meson.build
+@@ -490,7 +490,7 @@ configure_file(input : 'tools/libinput-measure-fuzz.man',
+ 	       )
+ 
+ configure_file(input: 'tools/libinput-measure-touchpad-tap.py',
+-	       output: 'libinput-measure-touchpad_tap',
++	       output: 'libinput-measure-touchpad-tap',
+ 	       configuration : config_noop,
+ 	       install : true,
+ 	       install_dir : libinput_tool_path
+-- 
+2.17.1
+
