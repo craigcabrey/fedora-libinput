@@ -4,7 +4,7 @@
 %global gitversion 58abea394
 
 Name:           libinput
-Version:        1.11.903
+Version:        1.12.0
 Release:        1%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
@@ -81,6 +81,7 @@ pathfix.py -i %{__python3} -p -n $(git grep -l  '#!/usr/bin/.*python3')
 %{udevdir}/libinput-device-group
 %{udevdir}/libinput-model-quirks
 %{udevdir}/rules.d/80-libinput-device-groups.rules
+%{udevdir}/rules.d/90-libinput-model-quirks.rules
 %{_bindir}/libinput
 %dir %{_libexecdir}/libinput/
 %{_libexecdir}/libinput/libinput-debug-events
@@ -102,7 +103,6 @@ pathfix.py -i %{__python3} -p -n $(git grep -l  '#!/usr/bin/.*python3')
 %{_libexecdir}/libinput/libinput-measure-touchpad-tap
 %{_libexecdir}/libinput/libinput-measure-touchpad-pressure
 %{_libexecdir}/libinput/libinput-measure-touch-size
-%{_libexecdir}/libinput/libinput-measure-trackpoint-range
 %{_libexecdir}/libinput/libinput-quirks
 %{_libexecdir}/libinput/libinput-record
 %{_libexecdir}/libinput/libinput-replay
@@ -111,7 +111,6 @@ pathfix.py -i %{__python3} -p -n $(git grep -l  '#!/usr/bin/.*python3')
 %{_mandir}/man1/libinput-measure-touchpad-tap.1*
 %{_mandir}/man1/libinput-measure-touch-size.1*
 %{_mandir}/man1/libinput-measure-touchpad-pressure.1*
-%{_mandir}/man1/libinput-measure-trackpoint-range.1*
 %{_mandir}/man1/libinput-quirks.1*
 %{_mandir}/man1/libinput-quirks-list.1*
 %{_mandir}/man1/libinput-quirks-validate.1*
@@ -119,6 +118,9 @@ pathfix.py -i %{__python3} -p -n $(git grep -l  '#!/usr/bin/.*python3')
 %{_mandir}/man1/libinput-replay.1*
 
 %changelog
+* Tue Sep 11 2018 Peter Hutterer <peter.hutterer@redhat.com> 1.12.0-1
+- libinput 1.12
+
 * Tue Sep 04 2018 Peter Hutterer <peter.hutterer@redhat.com> 1.11.903-1
 - libinput 1.12rc3
 
