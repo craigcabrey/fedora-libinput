@@ -4,7 +4,7 @@
 %global gitversion 58abea394
 
 Name:           libinput
-Version:        1.12.0
+Version:        1.12.1
 Release:        1%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
@@ -118,6 +118,9 @@ pathfix.py -i %{__python3} -p -n $(git grep -l  '#!/usr/bin/.*python3')
 %{_mandir}/man1/libinput-replay.1*
 
 %changelog
+* Wed Oct 03 2018 Peter Hutterer <peter.hutterer@redhat.com> 1.12.1-1
+- libinput 1.12.1
+
 * Tue Sep 11 2018 Peter Hutterer <peter.hutterer@redhat.com> 1.12.0-1
 - libinput 1.12
 
