@@ -69,10 +69,10 @@ pathfix.py -i %{__python3} -p -n $(git grep -l  '#!/usr/bin/.*python3')
 %meson_install
 
 %post
-/sbin/ldconfig
+%{?ldconfig}
 /usr/bin/udevadm hwdb --update  >/dev/null 2>&1 || :
 
-%postun -p /sbin/ldconfig
+%ldconfig_postun
 
 
 %files
