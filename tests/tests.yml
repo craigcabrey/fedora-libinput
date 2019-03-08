@@ -40,12 +40,12 @@
     required_packages:
       - meson
       - gcc
+      - gcc-c++
       - mtdev-devel
       - libevdev-devel
       - libwacom-devel
       - check-devel
       - systemd-devel
       - valgrind
-      - tree  # for debugging
     tests:
       - libinput-test-suite

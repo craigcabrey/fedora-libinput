@@ -1,13 +1,13 @@
 #!/bin/bash
 
-export # let's see what's available
+export  # let's see what's available
 pwd
-ls /dev/input
-ls /dev/
-
 set -e
-tree # figure out where we are
-# Can we use the spec file version number here??
+
+ls /dev/input   # if this fails, we don't have a VM
+ls /dev/uinput  # same as above
+
+# this is where the standard-test-source extracts to
 pushd ../source
 
 meson builddir -Ddocumentation=false -Dtests=true -Ddebug-gui=false
