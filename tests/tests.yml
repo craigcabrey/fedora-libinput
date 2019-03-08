@@ -29,11 +29,9 @@
     subjects: python3-devel  # for pathfix during srpm prep
     tags:
       - always
-      - classic
   - role: standard-test-source
     tags:
       - always
-      - classic
   - role: standard-test-basic
     tags:
       - classic
