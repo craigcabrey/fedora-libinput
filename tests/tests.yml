@@ -25,8 +25,15 @@
 
 - hosts: localhost
   roles:
-  - role: standard-test-rpm
-    subjects: python3-devel  # for pathfix during srpm prep
+  # standard-test-rpm should do this but it's currently broken. So let's add
+  # a noop test that requires the package we need
+  - role: standard-test-basic
+    required_packages:
+      - python3-devel  # for pathfix during srpm prep
+    tests:
+      - simple:
+          dir: .
+          command: echo "intentional noop"
     tags:
       - always
   - role: standard-test-source
