@@ -1,27 +1,27 @@
 ---
-- hosts: localhost
-  roles:
-  - role: standard-test-beakerlib
-    tags:
-      - classic
-    tests:
-      - libinput-tool-beakerlib
-
-- hosts: localhost
-  roles:
-  - role: standard-test-basic
-    tags:
-      - classic
-    tests:
-      - libinput-tool
-
-- hosts: localhost
-  roles:
-  - role: standard-test-scripts
-    tags:
-      - classic
-    tests:
-      - libinput-tool-scripttest/libinput-tool-test.sh
+#- hosts: localhost
+#  roles:
+#  - role: standard-test-beakerlib
+#    tags:
+#      - classic
+#    tests:
+#      - libinput-tool-beakerlib
+#
+#- hosts: localhost
+#  roles:
+#  - role: standard-test-basic
+#    tags:
+#      - classic
+#    tests:
+#      - libinput-tool
+#
+#- hosts: localhost
+#  roles:
+#  - role: standard-test-scripts
+#    tags:
+#      - classic
+#    tests:
+#      - libinput-tool-scripttest/libinput-tool-test.sh
 
 - hosts: localhost
   roles:
