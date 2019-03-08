@@ -1,3 +1,4 @@
+---
 #- hosts: localhost
 #  roles:
 #  - role: standard-test-beakerlib
@@ -25,11 +26,11 @@
 - hosts: localhost
   roles:
   - role: standard-test-rpm
-    subjects: python3-devel # for pathfix during srpm prep
+    subjects: python3-devel  # for pathfix during srpm prep
     tags:
       - always
       - classic
- - role: standard-test-source
+  - role: standard-test-source
     tags:
       - always
       - classic
@@ -44,6 +45,7 @@
       - libwacom-devel
       - check-devel
       - systemd-devel
-      - tree # for debugging
+      - valgrind
+      - tree  # for debugging
     tests:
       - libinput-test-suite
