@@ -33,7 +33,7 @@
     tests:
       - simple:
           dir: .
-          command: echo "intentional noop"
+          run: "echo noop"
     tags:
       - always
   - role: standard-test-source
