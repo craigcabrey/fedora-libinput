@@ -3,14 +3,14 @@
   roles:
   - role: standard-test-beakerlib
     tags:
-    - classic
+      - classic
     tests:
-    - libinput-tool-beakerlib
+      - libinput-tool-beakerlib
 
 - hosts: localhost
   roles:
   - role: standard-test-basic
     tags:
-    - classic
+      - classic
     tests:
-    - libinput-tool
+      - libinput-tool
