@@ -25,6 +25,10 @@
 
 - hosts: localhost
   roles:
+  - role: standard-test-rpm
+    subjects: python3-devel # for pathfix during srpm prep
+    tags:
+      - always
   - role: standard-test-source
     tags:
       - always
