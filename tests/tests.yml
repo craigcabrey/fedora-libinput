@@ -25,26 +25,25 @@
 
 - hosts: localhost
   roles:
-  - role: standard-test-rpm
-    subjects: python3-devel # for pathfix during srpm prep
-    tags:
-      - always
-      - classic
+#  - role: standard-test-rpm
+#    subjects: python3-devel # for pathfix during srpm prep
+#    tags:
+#      - always
+#      - classic
   - role: standard-test-source
     tags:
       - always
-      - classic
-  - role: standard-test-basic
-    tags:
-      - classic
-    required_packages:
-      - meson
-      - gcc
-      - mtdev-devel
-      - libevdev-devel
-      - libwacom-devel
-      - check-devel
-      - systemd-devel
-      - tree # for debugging
-    tests:
-      - libinput-test-suite
+#  - role: standard-test-basic
+#    tags:
+#      - classic
+#    required_packages:
+#      - meson
+#      - gcc
+#      - mtdev-devel
+#      - libevdev-devel
+#      - libwacom-devel
+#      - check-devel
+#      - systemd-devel
+#      - tree # for debugging
+#    tests:
+#      - libinput-test-suite
