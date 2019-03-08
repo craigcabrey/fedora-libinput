@@ -14,3 +14,30 @@
       - classic
     tests:
       - libinput-tool
+
+- hosts: localhost
+  roles:
+  - role: standard-test-scripts
+    tags:
+      - classic
+    tests:
+      - libinput-tool-scripttest/libinput-tool-test.sh
+
+- hosts: localhost
+  roles:
+  - role: standard-test-source
+    tags:
+      - always
+  - role: standard-test-basic
+    tags:
+      - classic
+    required_packages:
+      - meson
+      - gcc
+      - mtdev-devel
+      - libevdev-devel
+      - libwacom-devel
+      - check-devel
+      - systemd-devel
+    tests:
+      - libinput-test-suite
