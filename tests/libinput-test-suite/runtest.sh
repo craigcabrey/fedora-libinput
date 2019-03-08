@@ -8,7 +8,7 @@ ls /dev/
 set -e
 tree # figure out where we are
 # Can we use the spec file version number here??
-pushd tests/source
+pushd ../source
 
 meson builddir -Ddocumentation=false -Dtests=true -Ddebug-gui=false
 ninja -C builddir test

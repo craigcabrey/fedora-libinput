@@ -24,12 +24,12 @@
 
 - hosts: localhost
   roles:
-#  - role: standard-test-rpm
-#    subjects: python3-devel # for pathfix during srpm prep
-#    tags:
-#      - always
-#      - classic
-  - role: standard-test-source
+  - role: standard-test-rpm
+    subjects: python3-devel # for pathfix during srpm prep
+    tags:
+      - always
+      - classic
+ - role: standard-test-source
     tags:
       - always
       - classic
