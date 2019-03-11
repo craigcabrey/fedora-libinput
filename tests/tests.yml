@@ -37,6 +37,7 @@
           run: "echo noop"
     tags:
       - always
+      - classic
     required_packages:
       - python3-devel  # for pathfix during srpm prep
   - role: standard-test-source
