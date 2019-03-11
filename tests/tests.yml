@@ -28,6 +28,8 @@
   - role: standard-test-repo
     subjects: https://copr-be.cloud.fedoraproject.org/results/whot/libinput-git/fedora-29-x86_64/
     packages: libinput
+    tags:
+      - always
   # standard-test-rpm should do this but it's currently broken. So let's add
   # a noop test that requires the package we need
   - role: standard-test-basic
@@ -37,7 +39,6 @@
           run: "echo noop"
     tags:
       - always
-      - classic
     required_packages:
       - python3-devel  # for pathfix during srpm prep
   - role: standard-test-source
