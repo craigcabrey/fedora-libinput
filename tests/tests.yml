@@ -30,9 +30,9 @@
     packages: libinput
     tags:
       - classic  # running this with always doesn't do anything
-  - role: standard-test-source
-    tags:
-      - always
+  # sigh, we need this separately because of
+  # https://pagure.io/standard-test-roles/issue/307 and
+  # https://pagure.io/standard-test-roles/issue/311
   - role: standard-test-basic
     tags:
       - classic
@@ -47,5 +47,15 @@
       - systemd-devel
       - valgrind
       - python3-devel  # for pathfix during srpm prep
+    tests:
+      - simple:
+          dir: .
+          run: "echo noop"
+  - role: standard-test-source
+    tags:
+      - always
+  - role: standard-test-basic
+    tags:
+      - classic
     tests:
       - libinput-test-suite
