@@ -25,11 +25,6 @@
 
 - hosts: localhost
   roles:
-  - role: standard-test-repo
-    subjects: https://copr-be.cloud.fedoraproject.org/results/whot/libinput-git/fedora-29-x86_64/
-    packages: libinput
-    tags:
-      - classic  # running this with always doesn't do anything
   # sigh, we need this separately because of
   # https://pagure.io/standard-test-roles/issue/307 and
   # https://pagure.io/standard-test-roles/issue/311
