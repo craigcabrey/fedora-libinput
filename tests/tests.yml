@@ -31,14 +31,14 @@
   # standard-test-rpm should do this but it's currently broken. So let's add
   # a noop test that requires the package we need
   - role: standard-test-basic
-    required_packages:
-      - python3-devel  # for pathfix during srpm prep
     tests:
       - simple:
           dir: .
           run: "echo noop"
     tags:
       - always
+    required_packages:
+      - python3-devel  # for pathfix during srpm prep
   - role: standard-test-source
     tags:
       - always
