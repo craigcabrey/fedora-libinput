@@ -48,7 +48,7 @@
           run: "echo noop"
   - role: standard-test-source
     tags:
-      - always
+      - classic
   - role: standard-test-basic
     tags:
       - classic
