@@ -45,7 +45,7 @@
     tests:
       - simple:
           dir: .
-          run: "echo noop"
+          run: test -f /usr/bin/pathfix.py
   - role: standard-test-source
     tags:
       - classic
