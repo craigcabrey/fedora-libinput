@@ -30,17 +30,6 @@
     packages: libinput
     tags:
       - classic  # running this with always doesn't do anything
-  # standard-test-rpm should do this but it's currently broken. So let's add
-  # a noop test that requires the package we need
-  - role: standard-test-basic
-    tests:
-      - simple:
-          dir: .
-          run: "echo noop"
-    tags:
-      - classic  # running this with always doesn't do anythign
-    required_packages:
-      - python3-devel  # for pathfix during srpm prep
   - role: standard-test-source
     tags:
       - always
@@ -57,5 +46,6 @@
       - check-devel
       - systemd-devel
       - valgrind
+      - python3-devel  # for pathfix during srpm prep
     tests:
       - libinput-test-suite
