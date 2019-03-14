@@ -4,8 +4,8 @@
 %global gitversion 58abea394
 
 Name:           libinput
-Version:        1.12.6
-Release:        3%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Version:        1.12.901
+Release:        1%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 License:        MIT
@@ -117,6 +117,9 @@ pathfix.py -i %{__python3} -p -n $(git grep -l  '#!/usr/bin/.*python3')
 %{_mandir}/man1/libinput-replay.1*
 
 %changelog
+* Thu Mar 14 2019 Peter Hutterer <peter.hutterer@redhat.com> 1.12.901-1
+- libinput 1.12.901
+
 * Thu Feb 14 2019 Peter Hutterer <peter.hutterer@redhat.com> 1.12.6-3
 - Don't update the hwdb on install, we don't have any hwdb files anymore
 
