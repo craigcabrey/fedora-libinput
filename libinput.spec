@@ -4,8 +4,8 @@
 %global gitversion 58abea394
 
 Name:           libinput
-Version:        1.12.901
-Release:        3%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Version:        1.12.902
+Release:        1%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 License:        MIT
@@ -17,8 +17,6 @@ Source2:        commitid
 %else
 Source0:        http://www.freedesktop.org/software/libinput/libinput-%{version}.tar.xz
 %endif
-
-Patch01:        0001-meson.build-make-valgrind-optional.patch
 
 BuildRequires:  git-core
 BuildRequires:  gcc gcc-c++
@@ -133,6 +131,9 @@ pathfix.py -i %{__python3} -p -n $(git grep -l  '#!/usr/bin/.*python3')
 %{_mandir}/man1/libinput-test-suite.1*
 
 %changelog
+* Thu Mar 21 2019 Peter Hutterer <peter.hutterer@redhat.com> 1.12.902-1
+- libinput 1.12.902
+
 * Thu Mar 21 2019 Peter Hutterer <peter.hutterer@redhat.com> 1.12.901-3
 - Package the tests suite as subpackage
 
