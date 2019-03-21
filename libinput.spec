@@ -5,7 +5,7 @@
 
 Name:           libinput
 Version:        1.12.901
-Release:        2%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Release:        3%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 License:        MIT
@@ -18,6 +18,8 @@ Source2:        commitid
 Source0:        http://www.freedesktop.org/software/libinput/libinput-%{version}.tar.xz
 %endif
 
+Patch01:        0001-meson.build-make-valgrind-optional.patch
+
 BuildRequires:  git-core
 BuildRequires:  gcc gcc-c++
 BuildRequires:  meson
@@ -26,6 +28,7 @@ BuildRequires:  pkgconfig(mtdev) >= 1.1.0
 BuildRequires:  pkgconfig(libevdev) >= 0.4
 BuildRequires:  pkgconfig(libwacom) >= 0.20
 BuildRequires:  python3-devel
+BuildRequires:  check-devel
 
 %description
 libinput is a library that handles input devices for display servers and other
@@ -53,6 +56,14 @@ Requires:       python3-evdev python3-pyudev python3-libevdev
 The %{name}-utils package contains tools to debug hardware and analyze
 %{name}.
 
+%package        test
+Summary:        libinput integration test suite
+Requires:       %{name}%{?_isa} = %{version}-%{release}
+
+%description    test
+The %{name}-test package contains the libinput test suite. It is not
+intended to be run by users.
+
 %prep
 %autosetup -S git
 # Replace whatever the source uses with the approved call
@@ -61,7 +72,8 @@ pathfix.py -i %{__python3} -p -n $(git grep -l  '#!/usr/bin/.*python3')
 %build
 %meson -Ddebug-gui=false \
        -Ddocumentation=false \
-       -Dtests=false \
+       -Dtests=true \
+       -Dinstall-tests=true \
        -Dudev-dir=%{udevdir}
 %meson_build
 
@@ -116,7 +128,14 @@ pathfix.py -i %{__python3} -p -n $(git grep -l  '#!/usr/bin/.*python3')
 %{_mandir}/man1/libinput-record.1*
 %{_mandir}/man1/libinput-replay.1*
 
+%files test
+%{_libexecdir}/libinput/libinput-test-suite
+%{_mandir}/man1/libinput-test-suite.1*
+
 %changelog
+* Thu Mar 21 2019 Peter Hutterer <peter.hutterer@redhat.com> 1.12.901-3
+- Package the tests suite as subpackage
+
 * Fri Mar 15 2019 Peter Hutterer <peter.hutterer@redhat.com> 1.12.901-2
 - Require python3-libevdev for the utils subpackage
 
