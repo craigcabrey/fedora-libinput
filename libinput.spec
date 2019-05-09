@@ -4,8 +4,8 @@
 %global gitversion 58abea394
 
 Name:           libinput
-Version:        1.13.1
-Release:        2%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Version:        1.13.2
+Release:        1%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 License:        MIT
@@ -131,6 +131,9 @@ pathfix.py -i %{__python3} -p -n $(git grep -l  '#!/usr/bin/.*python3')
 %{_mandir}/man1/libinput-test-suite.1*
 
 %changelog
+* Thu May 09 2019 Peter Hutterer <peter.hutterer@redhat.com> 1.13.2-1
+- libinput 1.13.2
+
 * Tue Apr 16 2019 Adam Williamson <awilliam@redhat.com> - 1.13.1-2
 - Rebuild with Meson fix for #1699099
 
