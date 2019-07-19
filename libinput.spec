@@ -4,8 +4,8 @@
 %global gitversion 58abea394
 
 Name:           libinput
-Version:        1.13.4
-Release:        2%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Version:        1.13.902
+Release:        1%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 License:        MIT
@@ -48,7 +48,7 @@ developing applications that use %{name}.
 %package        utils
 Summary:        Utilities and tools for debugging %{name}
 Requires:       %{name}%{?_isa} = %{version}-%{release}
-Requires:       python3-evdev python3-pyudev python3-libevdev
+Requires:       python3-pyudev python3-libevdev
 
 %description    utils
 The %{name}-utils package contains tools to debug hardware and analyze
@@ -88,9 +88,9 @@ pathfix.py -i %{__python3} -p -n $(git grep -l  '#!/usr/bin/.*python3')
 %doc COPYING
 %{_libdir}/libinput.so.*
 %{udevdir}/libinput-device-group
-%{udevdir}/libinput-model-quirks
+%{udevdir}/libinput-fuzz-override
 %{udevdir}/rules.d/80-libinput-device-groups.rules
-%{udevdir}/rules.d/90-libinput-model-quirks.rules
+%{udevdir}/rules.d/90-libinput-fuzz-override.rules
 %{_bindir}/libinput
 %dir %{_libexecdir}/libinput/
 %{_libexecdir}/libinput/libinput-debug-events
@@ -131,6 +131,9 @@ pathfix.py -i %{__python3} -p -n $(git grep -l  '#!/usr/bin/.*python3')
 %{_mandir}/man1/libinput-test-suite.1*
 
 %changelog
+* Wed Jul 31 2019 Peter Hutterer <peter.hutterer@redhat.com> 1.13.902-1
+- libinput 1.14rc2
+
 * Thu Jul 25 2019 Fedora Release Engineering <releng@fedoraproject.org> - 1.13.4-2
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_31_Mass_Rebuild
 
