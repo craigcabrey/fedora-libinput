@@ -5,7 +5,7 @@
 
 Name:           libinput
 Version:        1.14.0
-Release:        1%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Release:        2%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 License:        MIT
@@ -17,6 +17,8 @@ Source2:        commitid
 %else
 Source0:        http://www.freedesktop.org/software/libinput/libinput-%{version}.tar.xz
 %endif
+
+Patch01:        0001-touchpad-don-t-allow-gestures-with-a-clickpad-button.patch
 
 BuildRequires:  git-core
 BuildRequires:  gcc gcc-c++
@@ -131,6 +133,9 @@ pathfix.py -i %{__python3} -p -n $(git grep -l  '#!/usr/bin/.*python3')
 %{_mandir}/man1/libinput-test-suite.1*
 
 %changelog
+* Tue Aug 20 2019 Peter Hutterer <peter.hutterer@redhat.com> 1.14.0-2
+- Fix click+drag on clickpads
+
 * Thu Aug 08 2019 Peter Hutterer <peter.hutterer@redhat.com> 1.14.0-1
 - libinput 1.14
 

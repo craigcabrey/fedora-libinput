@@ -1,0 +1,162 @@
+From 73d55cc6c5787ed7a086ecd0e1e797e85b80cb7b Mon Sep 17 00:00:00 2001
+From: Matt Mayfield <mdmayfield@users.noreply.github.com>
+Date: Wed, 14 Aug 2019 08:29:07 -0500
+Subject: [PATCH libinput] touchpad: don't allow gestures with a clickpad
+ button down by a finger
+
+Allowing gestures when holding a physical click enables tasks like
+switching workspaces while dragging an icon, but this should only be
+possible with a *thumb* holding down the clickpad, not fingers. This
+commit restores the ability to hold down the clickpad with two or three
+fingers to right- or middle-drag.
+
+Fixes #339, #340
+
+Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+---
+ src/evdev-mt-touchpad-gestures.c |  9 ++-
+ test/test-touchpad-buttons.c     | 94 ++++++++++++++++++++++++++++++++
+ 2 files changed, 101 insertions(+), 2 deletions(-)
+
+diff --git a/src/evdev-mt-touchpad-gestures.c b/src/evdev-mt-touchpad-gestures.c
+index 4a0287c7..fed25c90 100644
+--- a/src/evdev-mt-touchpad-gestures.c
++++ b/src/evdev-mt-touchpad-gestures.c
+@@ -717,8 +717,13 @@ tp_gesture_post_events(struct tp_dispatch *tp, uint64_t time)
+ 	if (tp->gesture.finger_count == 0)
+ 		return;
+ 
+-	/* When tap-and-dragging, force 1fg mode. */
+-	if (tp_tap_dragging(tp)) {
++	/* When tap-and-dragging, force 1fg mode. On clickpads, if the
++	 * physical button is down, don't allow gestures unless the button
++	 * is held down by a *thumb*, specifically.
++	 */
++	if (tp_tap_dragging(tp) ||
++	    (tp->buttons.is_clickpad && tp->buttons.state &&
++	     tp->thumb.state == THUMB_STATE_FINGER)) {
+ 		tp_gesture_cancel(tp, time);
+ 		tp->gesture.finger_count = 1;
+ 		tp->gesture.finger_count_pending = 0;
+diff --git a/test/test-touchpad-buttons.c b/test/test-touchpad-buttons.c
+index 4759b896..907d12bc 100644
+--- a/test/test-touchpad-buttons.c
++++ b/test/test-touchpad-buttons.c
+@@ -958,6 +958,96 @@ START_TEST(touchpad_clickfinger_appletouch_3fg)
+ }
+ END_TEST
+ 
++START_TEST(touchpad_clickfinger_click_drag)
++{
++	struct litest_device *dev = litest_current_device();
++	struct libinput *li = dev->libinput;
++	int nfingers = _i; /* ranged test */
++	unsigned int button;
++	int nslots = libevdev_get_num_slots(dev->evdev);
++
++	litest_enable_clickfinger(dev);
++	litest_drain_events(li);
++
++	litest_touch_down(dev, 0, 40, 50);
++	button = BTN_LEFT;
++
++	if (nfingers > 1) {
++		if (nslots > 1) {
++			litest_touch_down(dev, 1, 50, 50);
++		} else {
++			litest_event(dev, EV_KEY, BTN_TOOL_DOUBLETAP, 1);
++		}
++		button = BTN_RIGHT;
++	}
++
++	if (nfingers > 2) {
++		if (nslots > 2) {
++			litest_touch_down(dev, 2, 60, 50);
++		} else {
++			litest_event(dev, EV_KEY, BTN_TOOL_DOUBLETAP, 0);
++			litest_event(dev, EV_KEY, BTN_TOOL_TRIPLETAP, 1);
++		}
++		button = BTN_MIDDLE;
++	}
++
++	litest_button_click(dev, BTN_LEFT, true);
++
++	libinput_dispatch(li);
++	litest_assert_button_event(li, button,
++				   LIBINPUT_BUTTON_STATE_PRESSED);
++
++	for (int i = 0; i < 20; i++) {
++		litest_push_event_frame(dev);
++		switch (nfingers) {
++		case 3:
++			if (nslots >= nfingers)
++				litest_touch_move(dev, 2, 60, 50 + i);
++			/* fallthrough */
++		case 2:
++			if (nslots >= nfingers)
++				litest_touch_move(dev, 1, 50, 50 + i);
++			/* fallthrough */
++		case 1:
++			litest_touch_move(dev, 0, 40, 50 + i);
++			break;
++		}
++		litest_pop_event_frame(dev);
++		libinput_dispatch(li);
++	}
++
++	litest_assert_only_typed_events(li, LIBINPUT_EVENT_POINTER_MOTION);
++
++	litest_button_click(dev, BTN_LEFT, false);
++	litest_assert_button_event(li, button,
++				   LIBINPUT_BUTTON_STATE_RELEASED);
++
++	if (nfingers > 3) {
++		if (nslots > 3) {
++			litest_touch_up(dev, 2);
++		} else {
++			litest_event(dev, EV_KEY, BTN_TOOL_DOUBLETAP, 1);
++			litest_event(dev, EV_KEY, BTN_TOOL_TRIPLETAP, 0);
++		}
++	}
++
++	if (nfingers > 2) {
++		if (nslots > 2) {
++			litest_touch_up(dev, 1);
++		} else {
++			litest_event(dev, EV_KEY, BTN_TOOL_DOUBLETAP, 0);
++		}
++		button = BTN_MIDDLE;
++	}
++
++	litest_touch_up(dev, 0);
++
++
++	libinput_dispatch(li);
++	litest_assert_empty_queue(li);
++}
++END_TEST
++
+ START_TEST(touchpad_btn_left)
+ {
+ 	struct litest_device *dev = litest_current_device();
+@@ -2006,6 +2096,8 @@ END_TEST
+ 
+ TEST_COLLECTION(touchpad_buttons)
+ {
++	struct range finger_count = {1, 4};
++
+ 	litest_add("touchpad:button", touchpad_button, LITEST_TOUCHPAD, LITEST_CLICKPAD);
+ 
+ 	litest_add("touchpad:clickfinger", touchpad_1fg_clickfinger, LITEST_CLICKPAD, LITEST_ANY);
+@@ -2036,6 +2128,8 @@ TEST_COLLECTION(touchpad_buttons)
+ 	litest_add_for_device("touchpad:clickfinger", touchpad_clickfinger_appletouch_2fg, LITEST_APPLETOUCH);
+ 	litest_add_for_device("touchpad:clickfinger", touchpad_clickfinger_appletouch_3fg, LITEST_APPLETOUCH);
+ 
++	litest_add_ranged("touchpad:clickfinger", touchpad_clickfinger_click_drag, LITEST_CLICKPAD, LITEST_ANY, &finger_count);
++
+ 	litest_add("touchpad:click", touchpad_click_defaults_clickfinger, LITEST_APPLE_CLICKPAD, LITEST_ANY);
+ 	litest_add("touchpad:click", touchpad_click_defaults_btnarea, LITEST_CLICKPAD, LITEST_APPLE_CLICKPAD);
+ 	litest_add("touchpad:click", touchpad_click_defaults_none, LITEST_TOUCHPAD, LITEST_CLICKPAD);
+-- 
+2.21.0
+
