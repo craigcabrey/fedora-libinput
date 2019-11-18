@@ -5,7 +5,7 @@
 
 Name:           libinput
 Version:        1.14.3
-Release:        1%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Release:        2%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 License:        MIT
@@ -17,6 +17,8 @@ Source2:        commitid
 %else
 Source0:        http://www.freedesktop.org/software/libinput/libinput-%{version}.tar.xz
 %endif
+
+Patch01:        0001-tools-point-users-to-the-libinput-utils-package-for-.patch
 
 BuildRequires:  git-core
 BuildRequires:  gcc gcc-c++
@@ -133,6 +135,9 @@ pathfix.py -i %{__python3} -p -n $(git grep -l  '#!/usr/bin/.*python3')
 %{_mandir}/man1/libinput-test-suite.1*
 
 %changelog
+* Tue Nov 19 2019 Peter Hutterer <peter.hutterer@redhat.com> 1.14.3-2
+- Point users to the libinput-utils package for missing tools.
+
 * Mon Oct 28 2019 Peter Hutterer <peter.hutterer@redhat.com> 1.14.3-1
 - libinput 1.14.3
 

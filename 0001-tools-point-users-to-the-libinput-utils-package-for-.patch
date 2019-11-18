@@ -1,0 +1,28 @@
+From 579e58d5413c96e2e8499354273d5a6604a17627 Mon Sep 17 00:00:00 2001
+From: rpm-build <rpm-build>
+Date: Tue, 19 Nov 2019 09:38:18 +1000
+Subject: [PATCH] tools: point users to the libinput-utils package for missing
+ commands
+
+Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+---
+ tools/shared.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/tools/shared.c b/tools/shared.c
+index 02c09dd..1367a16 100644
+--- a/tools/shared.c
++++ b/tools/shared.c
+@@ -542,7 +542,8 @@ tools_exec_command(const char *prefix, int real_argc, char **real_argv)
+ 		if (errno == ENOENT) {
+ 			fprintf(stderr,
+ 				"libinput: %s is not a libinput command or not installed. "
+-				"See 'libinput --help'\n",
++				"See 'libinput --help'\n"
++				"\nThis command may be provided by the libinput-utils package.\n",
+ 				command);
+ 			return EXIT_INVALID_USAGE;
+ 		} else {
+-- 
+2.23.0
+
