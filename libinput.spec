@@ -4,8 +4,8 @@
 %global gitversion 58abea394
 
 Name:           libinput
-Version:        1.14.3
-Release:        2%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Version:        1.14.901
+Release:        1%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 License:        MIT
@@ -90,7 +90,8 @@ pathfix.py -i %{__python3} -p -n $(git grep -l  '#!/usr/bin/.*python3')
 %doc COPYING
 %{_libdir}/libinput.so.*
 %{udevdir}/libinput-device-group
-%{udevdir}/libinput-fuzz-override
+%{udevdir}/libinput-fuzz-to-zero
+%{udevdir}/libinput-fuzz-extract
 %{udevdir}/rules.d/80-libinput-device-groups.rules
 %{udevdir}/rules.d/90-libinput-fuzz-override.rules
 %{_bindir}/libinput
@@ -111,6 +112,7 @@ pathfix.py -i %{__python3} -p -n $(git grep -l  '#!/usr/bin/.*python3')
 %{_libdir}/pkgconfig/libinput.pc
 
 %files utils
+%{_libexecdir}/libinput/libinput-debug-tablet
 %{_libexecdir}/libinput/libinput-measure
 %{_libexecdir}/libinput/libinput-measure-fuzz
 %{_libexecdir}/libinput/libinput-measure-touchpad-tap
@@ -119,6 +121,7 @@ pathfix.py -i %{__python3} -p -n $(git grep -l  '#!/usr/bin/.*python3')
 %{_libexecdir}/libinput/libinput-quirks
 %{_libexecdir}/libinput/libinput-record
 %{_libexecdir}/libinput/libinput-replay
+%{_mandir}/man1/libinput-debug-tablet.1*
 %{_mandir}/man1/libinput-measure.1*
 %{_mandir}/man1/libinput-measure-fuzz.1*
 %{_mandir}/man1/libinput-measure-touchpad-tap.1*
@@ -135,6 +138,9 @@ pathfix.py -i %{__python3} -p -n $(git grep -l  '#!/usr/bin/.*python3')
 %{_mandir}/man1/libinput-test-suite.1*
 
 %changelog
+* Thu Dec 05 2019 Peter Hutterer <peter.hutterer@redhat.com> 1.14.901-1
+- libinput 1.15rc1
+
 * Tue Nov 19 2019 Peter Hutterer <peter.hutterer@redhat.com> 1.14.3-2
 - Point users to the libinput-utils package for missing tools.
 
