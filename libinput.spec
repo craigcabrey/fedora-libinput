@@ -4,8 +4,8 @@
 %global gitversion 58abea394
 
 Name:           libinput
-Version:        1.15.0
-Release:        2%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Version:        1.15.1
+Release:        1%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 License:        MIT
@@ -138,6 +138,9 @@ pathfix.py -i %{__python3} -p -n $(git grep -l  '#!/usr/bin/.*python3')
 %{_mandir}/man1/libinput-test-suite.1*
 
 %changelog
+* Mon Feb 03 2020 Peter Hutterer <peter.hutterer@redhat.com> 1.15.1-1
+- libinput 1.15.1
+
 * Wed Jan 29 2020 Fedora Release Engineering <releng@fedoraproject.org> - 1.15.0-2
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_32_Mass_Rebuild
 
