@@ -4,8 +4,8 @@
 %global gitversion 58abea394
 
 Name:           libinput
-Version:        1.15.3
-Release:        2%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Version:        1.15.4
+Release:        1%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 License:        MIT
@@ -19,7 +19,6 @@ Source0:        http://www.freedesktop.org/software/libinput/libinput-%{version}
 %endif
 
 Patch01:        0001-tools-point-users-to-the-libinput-utils-package-for-.patch
-Patch02:        0001-tools-record-fix-dmi-recording.patch
 
 BuildRequires:  git-core
 BuildRequires:  gcc gcc-c++
@@ -139,6 +138,9 @@ pathfix.py -i %{__python3} -p -n $(git grep -l  '#!/usr/bin/.*python3')
 %{_mandir}/man1/libinput-test-suite.1*
 
 %changelog
+* Wed Mar 18 2020 Peter Hutterer <peter.hutterer@redhat.com> 1.15.4-1
+- libinput 1.15.4
+
 * Mon Mar 09 2020 Peter Hutterer <peter.hutterer@redhat.com> 1.15.3-2
 - fix libinput record's dmi modalias recording
 
