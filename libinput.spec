@@ -4,7 +4,7 @@
 %global gitversion 58abea394
 
 Name:           libinput
-Version:        1.15.5
+Version:        1.15.6
 Release:        1%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
@@ -138,6 +138,9 @@ pathfix.py -i %{__python3} -p -n $(git grep -l  '#!/usr/bin/.*python3')
 %{_mandir}/man1/libinput-test-suite.1*
 
 %changelog
+* Fri Jun 19 2020 Peter Hutterer <peter.hutterer@redhat.com> 1.15.6-1
+- libinput 1.15.6
+
 * Sat Apr 11 2020 Peter Hutterer <peter.hutterer@redhat.com> 1.15.5-1
 - libinput 1.15.5
 
@@ -732,7 +735,7 @@ pathfix.py -i %{__python3} -p -n $(git grep -l  '#!/usr/bin/.*python3')
 
 * Fri May 29 2015 Peter Hutterer <peter.hutterer@redhat.com> 0.15.0-4
 - Add tap-to-end-drag patch (#1225998)
- 
+
 * Wed May 27 2015 Peter Hutterer <peter.hutterer@redhat.com> 0.15.0-3
 - Refine disable-while-typing (#1209753)
 
