@@ -4,7 +4,7 @@
 %global gitversion 58abea394
 
 Name:           libinput
-Version:        1.15.6
+Version:        1.15.901
 Release:        1%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
@@ -17,8 +17,6 @@ Source2:        commitid
 %else
 Source0:        http://www.freedesktop.org/software/libinput/libinput-%{version}.tar.xz
 %endif
-
-Patch01:        0001-tools-point-users-to-the-libinput-utils-package-for-.patch
 
 BuildRequires:  git-core
 BuildRequires:  gcc gcc-c++
@@ -112,21 +110,27 @@ pathfix.py -i %{__python3} -p -n $(git grep -l  '#!/usr/bin/.*python3')
 %{_libdir}/pkgconfig/libinput.pc
 
 %files utils
+%{_libexecdir}/libinput/libinput-analyze
+%{_libexecdir}/libinput/libinput-analyze-per-slot-delta
 %{_libexecdir}/libinput/libinput-debug-tablet
 %{_libexecdir}/libinput/libinput-measure
 %{_libexecdir}/libinput/libinput-measure-fuzz
 %{_libexecdir}/libinput/libinput-measure-touchpad-tap
 %{_libexecdir}/libinput/libinput-measure-touchpad-pressure
+%{_libexecdir}/libinput/libinput-measure-touchpad-size
 %{_libexecdir}/libinput/libinput-measure-touch-size
 %{_libexecdir}/libinput/libinput-quirks
 %{_libexecdir}/libinput/libinput-record
 %{_libexecdir}/libinput/libinput-replay
+%{_mandir}/man1/libinput-analyze.1*
+%{_mandir}/man1/libinput-analyze-per-slot-delta.1*
 %{_mandir}/man1/libinput-debug-tablet.1*
 %{_mandir}/man1/libinput-measure.1*
 %{_mandir}/man1/libinput-measure-fuzz.1*
 %{_mandir}/man1/libinput-measure-touchpad-tap.1*
 %{_mandir}/man1/libinput-measure-touch-size.1*
 %{_mandir}/man1/libinput-measure-touchpad-pressure.1*
+%{_mandir}/man1/libinput-measure-touchpad-size.1*
 %{_mandir}/man1/libinput-quirks.1*
 %{_mandir}/man1/libinput-quirks-list.1*
 %{_mandir}/man1/libinput-quirks-validate.1*
@@ -138,6 +142,9 @@ pathfix.py -i %{__python3} -p -n $(git grep -l  '#!/usr/bin/.*python3')
 %{_mandir}/man1/libinput-test-suite.1*
 
 %changelog
+* Wed Jul 15 2020 Peter Hutterer <peter.hutterer@redhat.com> 1.15.901-1
+- libinput 1.16rc1
+
 * Fri Jun 19 2020 Peter Hutterer <peter.hutterer@redhat.com> 1.15.6-1
 - libinput 1.15.6
 
