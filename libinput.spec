@@ -19,7 +19,7 @@ Source0:        http://www.freedesktop.org/software/libinput/libinput-%{version}
 %endif
 
 BuildRequires:  git-core
-BuildRequires:  gcc gcc-c++
+BuildRequires:  gcc
 BuildRequires:  meson
 BuildRequires:  pkgconfig(libudev)
 BuildRequires:  pkgconfig(mtdev) >= 1.1.0
@@ -142,6 +142,9 @@ pathfix.py -i %{__python3} -p -n $(git grep -l  '#!/usr/bin/.*python3')
 %{_mandir}/man1/libinput-test-suite.1*
 
 %changelog
+* Tue Sep 22 2020 Peter Hutterer <peter.hutterer@redhat.com>
+- Drop gcc-c++ from the BuildRequires, it's no longer needed
+
 * Thu Aug 13 2020 Peter Hutterer <peter.hutterer@redhat.com> 1.16.1-1
 - libinput 1.1.6.1
 
