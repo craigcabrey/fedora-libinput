@@ -4,7 +4,7 @@
 %global gitversion 58abea394
 
 Name:           libinput
-Version:        1.16.1
+Version:        1.16.3
 Release:        1%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
@@ -142,11 +142,14 @@ pathfix.py -i %{__python3} -p -n $(git grep -l  '#!/usr/bin/.*python3')
 %{_mandir}/man1/libinput-test-suite.1*
 
 %changelog
+* Tue Nov 03 2020 Peter Hutterer <peter.hutterer@redhat.com> 1.16.3-1
+- libinput 1.16.3
+
 * Tue Sep 22 2020 Peter Hutterer <peter.hutterer@redhat.com>
 - Drop gcc-c++ from the BuildRequires, it's no longer needed
 
 * Thu Aug 13 2020 Peter Hutterer <peter.hutterer@redhat.com> 1.16.1-1
-- libinput 1.1.6.1
+- libinput 1.16.1
 
 * Mon Aug 03 2020 Peter Hutterer <peter.hutterer@redhat.com> 1.16.0-1
 - libinput 1.16.0
