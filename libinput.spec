@@ -5,7 +5,7 @@
 
 Name:           libinput
 Version:        1.16.4
-Release:        1%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Release:        2%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 License:        MIT
@@ -142,6 +142,9 @@ pathfix.py -i %{__python3} -p -n $(git grep -l  '#!/usr/bin/.*python3')
 %{_mandir}/man1/libinput-test-suite.1*
 
 %changelog
+* Tue Jan 26 2021 Fedora Release Engineering <releng@fedoraproject.org> - 1.16.4-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_34_Mass_Rebuild
+
 * Fri Nov 27 2020 Peter Hutterer <peter.hutterer@redhat.com> 1.16.4-1
 - libinput 1.16.4
 
