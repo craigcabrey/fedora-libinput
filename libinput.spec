@@ -4,7 +4,7 @@
 %global gitversion 58abea394
 
 Name:           libinput
-Version:        1.16.902
+Version:        1.17.0
 Release:        1%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
@@ -112,6 +112,7 @@ pathfix.py -i %{__python3} -p -n $(git grep -l  '#!/usr/bin/.*python3')
 %files utils
 %{_libexecdir}/libinput/libinput-analyze
 %{_libexecdir}/libinput/libinput-analyze-per-slot-delta
+%{_libexecdir}/libinput/libinput-analyze-recording
 %{_libexecdir}/libinput/libinput-analyze-touch-down-state
 %{_libexecdir}/libinput/libinput-debug-tablet
 %{_libexecdir}/libinput/libinput-measure
@@ -125,6 +126,7 @@ pathfix.py -i %{__python3} -p -n $(git grep -l  '#!/usr/bin/.*python3')
 %{_libexecdir}/libinput/libinput-replay
 %{_mandir}/man1/libinput-analyze.1*
 %{_mandir}/man1/libinput-analyze-per-slot-delta.1*
+%{_mandir}/man1/libinput-analyze-recording.1*
 %{_mandir}/man1/libinput-analyze-touch-down-state.1*
 %{_mandir}/man1/libinput-debug-tablet.1*
 %{_mandir}/man1/libinput-measure.1*
@@ -144,6 +146,9 @@ pathfix.py -i %{__python3} -p -n $(git grep -l  '#!/usr/bin/.*python3')
 %{_mandir}/man1/libinput-test-suite.1*
 
 %changelog
+* Tue Feb 23 2021 Peter Hutterer <peter.hutterer@redhat.com> 1.17.0-1
+- libinput 1.17.0
+
 * Tue Feb 16 2021 Peter Hutterer <peter.hutterer@redhat.com> 1.16.902-1
 - libinput 1.16.902
 
