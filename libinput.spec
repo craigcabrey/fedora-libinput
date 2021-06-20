@@ -5,7 +5,7 @@
 
 Name:           libinput
 Version:        1.18.0
-Release:        1%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Release:        2%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 License:        MIT
@@ -17,6 +17,8 @@ Source2:        commitid
 %else
 Source0:        http://www.freedesktop.org/software/libinput/libinput-%{version}.tar.xz
 %endif
+
+Patch001:       0001-quirks-add-a-quirk-for-the-Huawei-Matebook-2020-touc.patch
 
 BuildRequires:  git-core
 BuildRequires:  gcc
@@ -146,6 +148,9 @@ pathfix.py -i %{__python3} -p -n $(git grep -l  '#!/usr/bin/.*python3')
 %{_mandir}/man1/libinput-test-suite.1*
 
 %changelog
+* Mon Jun 21 2021 Peter Hutterer <peter.hutterer@redhat.com> 1.18.0-2
+- Add quirk for the Huawai Matebook 2020 (#1972370)
+
 * Wed Jun 02 2021 Peter Hutterer <peter.hutterer@redhat.com> 1.18.0-1
 - libinput 1.18.0
 
