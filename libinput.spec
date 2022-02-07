@@ -4,8 +4,8 @@
 %global gitversion 58abea394
 
 Name:           libinput
-Version:        1.19.3
-Release:        3%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Version:        1.19.901
+Release:        1%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 License:        MIT
@@ -15,7 +15,7 @@ Source0:        %{name}-%{gitdate}.tar.xz
 Source1:        make-git-snapshot.sh
 Source2:        commitid
 %else
-Source0:        http://www.freedesktop.org/software/libinput/libinput-%{version}.tar.xz
+Source0:        https://gitlab.freedesktop.org/libinput/libinput/-/archive/%{version}/libinput-%{version}.tar.bz2
 %endif
 
 BuildRequires:  git-core
@@ -146,6 +146,9 @@ pathfix.py -i %{__python3} -p -n $(git grep -l  '#!/usr/bin/.*python3')
 %{_mandir}/man1/libinput-test-suite.1*
 
 %changelog
+* Mon Feb 07 2022 Peter Hutterer <peter.hutterer@redhat.com> - 1.19.901-1
+- libinput 1.20rc1
+
 * Thu Jan 20 2022 Fedora Release Engineering <releng@fedoraproject.org> - 1.19.3-3
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_36_Mass_Rebuild
 
