@@ -5,7 +5,7 @@
 
 Name:           libinput
 Version:        1.21.0
-Release:        2%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Release:        3%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 License:        MIT
@@ -25,6 +25,7 @@ BuildRequires:  pkgconfig(libudev)
 BuildRequires:  pkgconfig(mtdev) >= 1.1.0
 BuildRequires:  pkgconfig(libevdev) >= 0.4
 BuildRequires:  pkgconfig(libwacom) >= 0.20
+BuildRequires:  pkgconfig(udev)
 BuildRequires:  python3-devel
 BuildRequires:  check-devel
 
@@ -150,6 +151,9 @@ pathfix.py -i %{__python3} -p -n $(git grep -l  '#!/usr/bin/.*python3')
 
 
 %changelog
+* Wed Aug 31 2022 Peter Hutterer <peter.hutterer@redhat.com> - 1.21.0-3
+- Add udev to BuildRequires for udevdir to resolve againt
+
 * Thu Jul 21 2022 Fedora Release Engineering <releng@fedoraproject.org> - 1.21.0-2
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_37_Mass_Rebuild
 
