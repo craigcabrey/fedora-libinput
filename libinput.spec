@@ -66,7 +66,7 @@ intended to be run by users.
 %prep
 %autosetup -S git
 # Replace whatever the source uses with the approved call
-pathfix.py -i %{__python3} -p -n $(git grep -l  '#!/usr/bin/.*python3')
+%py3_shebang_fix $(git grep -l  '#!/usr/bin/.*python3')
 
 %build
 %meson -Ddebug-gui=false \
