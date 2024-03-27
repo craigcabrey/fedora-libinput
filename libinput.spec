@@ -5,7 +5,7 @@
 
 Name:           libinput
 Version:        1.25.0
-Release:        3%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Release:        4%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 # SPDX
@@ -18,6 +18,9 @@ Source2:        commitid
 %else
 Source0:        https://gitlab.freedesktop.org/libinput/libinput/-/archive/%{version}/libinput-%{version}.tar.bz2
 %endif
+
+# https://gitlab.freedesktop.org/libinput/libinput/-/merge_requests/974
+Patch0001:      0001-Recognizing-framework-16-keyboard-modules-as-internal.patch
 
 BuildRequires:  git-core
 BuildRequires:  gcc
@@ -154,6 +157,9 @@ intended to be run by users.
 
 
 %changelog
+* Wed Mar 27 2024 Arthur Bols <arthur@bols.dev> - 1.25.0-4
+- Add quirk for Framework 16 to recognize keyboard as internal
+
 * Thu Jan 25 2024 Fedora Release Engineering <releng@fedoraproject.org> - 1.25.0-3
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_40_Mass_Rebuild
 

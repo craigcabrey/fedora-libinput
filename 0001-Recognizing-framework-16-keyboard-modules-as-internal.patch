@@ -1,0 +1,27 @@
+From 566857bd98131009699c9ab6efc7af37afd43fd0 Mon Sep 17 00:00:00 2001
+From: Josip Medved <jmedved@jmedved.com>
+Date: Fri, 16 Feb 2024 23:48:43 -0800
+Subject: [PATCH] Recognizing Framework 16 keyboard modules as internal
+ keyboards
+
+---
+ quirks/50-system-framework.quirks | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/quirks/50-system-framework.quirks b/quirks/50-system-framework.quirks
+index d42fe370e..3f4408eca 100644
+--- a/quirks/50-system-framework.quirks
++++ b/quirks/50-system-framework.quirks
+@@ -3,3 +3,9 @@ MatchName=PIXA3854:00 093A:0274 Touchpad
+ MatchUdevType=touchpad
+ MatchDMIModalias=dmi:*svnFramework:pnLaptop*
+ AttrEventCode=-BTN_RIGHT
++
++[Framework Laptop 16 Keyboard Module]
++MatchName=Framework Laptop 16 Keyboard Module*
++MatchUdevType=keyboard
++MatchDMIModalias=dmi:*svnFramework:pnLaptop16*
++AttrKeyboardIntegration=internal
+-- 
+GitLab
+
