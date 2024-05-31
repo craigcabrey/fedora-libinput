@@ -5,7 +5,7 @@
 
 Name:           libinput
 Version:        1.25.0
-Release:        4%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Release:        5%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 # SPDX
@@ -102,6 +102,7 @@ intended to be run by users.
 %{_libexecdir}/libinput/libinput-debug-events
 %{_libexecdir}/libinput/libinput-list-devices
 %{_mandir}/man1/libinput.1*
+%dir %{_datadir}/libinput
 %{_datadir}/libinput/*.quirks
 %dir %{_datadir}/zsh
 %dir %{_datadir}/zsh/site-functions
@@ -157,6 +158,9 @@ intended to be run by users.
 
 
 %changelog
+* Fri May 31 2024 Peter Hutterer <peter.hutterer@redhat.com> - 1.25.0-5
+- Mark datadir/libinput as owned by us (#2283754)
+
 * Wed Mar 27 2024 Arthur Bols <arthur@bols.dev> - 1.25.0-4
 - Add quirk for Framework 16 to recognize keyboard as internal
 
