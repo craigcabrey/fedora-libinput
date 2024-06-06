@@ -4,8 +4,8 @@
 %global gitversion 58abea394
 
 Name:           libinput
-Version:        1.25.0
-Release:        5%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Version:        1.26.0
+Release:        1%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 # SPDX
@@ -18,9 +18,6 @@ Source2:        commitid
 %else
 Source0:        https://gitlab.freedesktop.org/libinput/libinput/-/archive/%{version}/libinput-%{version}.tar.bz2
 %endif
-
-# https://gitlab.freedesktop.org/libinput/libinput/-/merge_requests/974
-Patch0001:      0001-Recognizing-framework-16-keyboard-modules-as-internal.patch
 
 BuildRequires:  git-core
 BuildRequires:  gcc
@@ -158,6 +155,9 @@ intended to be run by users.
 
 
 %changelog
+* Thu Jun 06 2024 Peter Hutterer <peter.hutterer@redhat.com> 1.26.0-1
+- libinput 1.26.0
+
 * Fri May 31 2024 Peter Hutterer <peter.hutterer@redhat.com> - 1.25.0-5
 - Mark datadir/libinput as owned by us (#2283754)
 
