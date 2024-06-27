@@ -4,7 +4,7 @@
 %global gitversion 58abea394
 
 Name:           libinput
-Version:        1.26.0
+Version:        1.26.1
 Release:        1%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
@@ -114,6 +114,7 @@ intended to be run by users.
 
 %files utils
 %{_libexecdir}/libinput/libinput-analyze
+%{_libexecdir}/libinput/libinput-analyze-buttons
 %{_libexecdir}/libinput/libinput-analyze-per-slot-delta
 %{_libexecdir}/libinput/libinput-analyze-recording
 %{_libexecdir}/libinput/libinput-analyze-touch-down-state
@@ -129,6 +130,7 @@ intended to be run by users.
 %{_libexecdir}/libinput/libinput-record
 %{_libexecdir}/libinput/libinput-replay
 %{_mandir}/man1/libinput-analyze.1*
+%{_mandir}/man1/libinput-analyze-buttons.1*
 %{_mandir}/man1/libinput-analyze-per-slot-delta.1*
 %{_mandir}/man1/libinput-analyze-recording.1*
 %{_mandir}/man1/libinput-analyze-touch-down-state.1*
@@ -155,6 +157,9 @@ intended to be run by users.
 
 
 %changelog
+* Thu Jun 27 2024 Peter Hutterer <peter.hutterer@redhat.com> - 1.26.1-1
+- libinput 1.26.1
+
 * Thu Jun 06 2024 Peter Hutterer <peter.hutterer@redhat.com> 1.26.0-1
 - libinput 1.26.0
 
