@@ -4,7 +4,7 @@
 %global gitversion 58abea394
 
 Name:           libinput
-Version:        1.26.2
+Version:        1.27.0
 Release:        1%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
@@ -28,7 +28,6 @@ BuildRequires:  pkgconfig(libevdev) >= 0.4
 BuildRequires:  pkgconfig(libwacom) >= 0.20
 BuildRequires:  pkgconfig(udev)
 BuildRequires:  python3-rpm-macros
-BuildRequires:  check-devel
 
 %description
 libinput is a library that handles input devices for display servers and other
@@ -157,6 +156,10 @@ intended to be run by users.
 
 
 %changelog
+* Tue Nov 19 2024 Peter Hutterer <peter.hutterer@redhat.com> - 1.27.0-1
+- libinput 1.27.0
+- drop the check-devel dependency, no longer needed
+
 * Mon Aug 19 2024 Peter Hutterer <peter.hutterer@redhat.com> - 1.26.2-1
 - libinput 1.26.2
 
