@@ -5,7 +5,7 @@
 
 Name:           libinput
 Version:        1.27.0
-Release:        1%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Release:        2%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 # SPDX
@@ -156,6 +156,9 @@ intended to be run by users.
 
 
 %changelog
+* Fri Nov 22 2024 Peter Hutterer <peter.hutterer@redhat.com> - 1.27.0-2
+- libinput 1.27.0, with sources
+
 * Tue Nov 19 2024 Peter Hutterer <peter.hutterer@redhat.com> - 1.27.0-1
 - libinput 1.27.0
 - drop the check-devel dependency, no longer needed
