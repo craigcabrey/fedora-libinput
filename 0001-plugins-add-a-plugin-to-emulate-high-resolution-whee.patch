@@ -1,0 +1,208 @@
+From 5f44eebff87b13977f0eeca5356cf00228f285b6 Mon Sep 17 00:00:00 2001
+From: Peter Hutterer <peter.hutterer@who-t.net>
+Date: Mon, 14 Jul 2025 10:05:22 +1000
+Subject: [PATCH] plugins: add a plugin to emulate high-resolution wheel events
+
+Fixes a regression causing missing scroll events on devices where the
+kernel only sets REL_WHEEL/REL_HWHEEL but not the corresponding
+hires events. On those devices we would get the legacy axis events but
+no longer the new ones.
+
+The mouse wheel plugin will correctly emulate missing hires events
+but it doesn't attach to devices where the hires bit is never set.
+
+This plugin can be very simple - since we know we enabled the code on
+this device we don't need to keep any extra state around. If our frame
+handler is called for this device we want to add the hi-res events.
+
+Theoretically this breaks if the device has only one hi-res axis enabled
+but not the other one (i.e. REL_WHEEL_HI_RES but only REL_HWHEEL) but
+that's too theoretical to worry about.
+
+Closes #1156
+
+Fixes: 31854a829a21 ("plugin: only register the wheel plugin on devices that have a wheel")
+Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+---
+ meson.build                              |  1 +
+ src/libinput-plugin-mouse-wheel-lowres.c | 97 ++++++++++++++++++++++++
+ src/libinput-plugin-mouse-wheel-lowres.h | 30 ++++++++
+ src/libinput-plugin.c                    |  2 +
+ 4 files changed, 130 insertions(+)
+ create mode 100644 src/libinput-plugin-mouse-wheel-lowres.c
+ create mode 100644 src/libinput-plugin-mouse-wheel-lowres.h
+
+diff --git a/meson.build b/meson.build
+index e5932754bc9f..e51357885ae9 100644
+--- a/meson.build
++++ b/meson.build
+@@ -384,6 +384,7 @@ src_libinput = src_libfilter + [
+ 	'src/libinput-plugin.c',
+ 	'src/libinput-plugin-button-debounce.c',
+ 	'src/libinput-plugin-mouse-wheel.c',
++	'src/libinput-plugin-mouse-wheel-lowres.c',
+ 	'src/libinput-plugin-tablet-double-tool.c',
+ 	'src/libinput-plugin-tablet-eraser-button.c',
+ 	'src/libinput-plugin-tablet-forced-tool.c',
+diff --git a/src/libinput-plugin-mouse-wheel-lowres.c b/src/libinput-plugin-mouse-wheel-lowres.c
+new file mode 100644
+index 000000000000..ce3847e2e002
+--- /dev/null
++++ b/src/libinput-plugin-mouse-wheel-lowres.c
+@@ -0,0 +1,97 @@
++/*
++ * Copyright © 2025 Red Hat, Inc.
++ *
++ * Permission is hereby granted, free of charge, to any person obtaining a
++ * copy of this software and associated documentation files (the "Software"),
++ * to deal in the Software without restriction, including without limitation
++ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
++ * and/or sell copies of the Software, and to permit persons to whom the
++ * Software is furnished to do so, subject to the following conditions:
++ *
++ * The above copyright notice and this permission notice (including the next
++ * paragraph) shall be included in all copies or substantial portions of the
++ * Software.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
++ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
++ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
++ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
++ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
++ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
++ * DEALINGS IN THE SOFTWARE.
++ */
++
++#include "config.h"
++
++#include <libevdev/libevdev.h>
++
++#include "evdev.h"
++#include "libinput-plugin-mouse-wheel-lowres.h"
++#include "libinput-plugin.h"
++#include "src/evdev-frame.h"
++
++static void
++wheel_plugin_device_new(struct libinput_plugin *libinput_plugin,
++			struct libinput_device *device,
++			struct libevdev *libevdev,
++			struct udev_device *udev_device)
++{
++	struct evdev_device *evdev = evdev_device(device);
++
++	if (libevdev_has_event_code(libevdev, EV_REL, REL_WHEEL_HI_RES) ||
++	    libevdev_has_event_code(libevdev, EV_REL, REL_HWHEEL_HI_RES))
++		return;
++
++	if (libevdev_has_event_code(libevdev, EV_REL, REL_WHEEL) ||
++	    libevdev_has_event_code(libevdev, EV_REL, REL_HWHEEL))
++		evdev_log_info(evdev,
++			       "emulating high-resolution scroll wheel events.\n");
++
++	if (libevdev_has_event_code(libevdev, EV_REL, REL_WHEEL))
++		libevdev_enable_event_code(libevdev, EV_REL, REL_WHEEL_HI_RES, NULL);
++
++	if (libevdev_has_event_code(libevdev, EV_REL, REL_HWHEEL))
++		libevdev_enable_event_code(libevdev, EV_REL, REL_HWHEEL_HI_RES, NULL);
++
++	libinput_plugin_enable_device_event_frame(libinput_plugin, device, true);
++}
++
++static void
++wheel_plugin_evdev_frame(struct libinput_plugin *libinput_plugin,
++			 struct libinput_device *device,
++			 struct evdev_frame *frame)
++{
++	size_t nevents;
++	struct evdev_event *events = evdev_frame_get_events(frame, &nevents);
++
++	for (size_t i = 0; i < nevents; i++) {
++		struct evdev_event *e = &events[i];
++		switch (evdev_usage_enum(e->usage)) {
++		case EVDEV_REL_WHEEL:
++			evdev_frame_append_one(frame,
++					       evdev_usage_from(EVDEV_REL_WHEEL_HI_RES),
++					       e->value * 120);
++			break;
++		case EVDEV_REL_HWHEEL:
++			evdev_frame_append_one(
++				frame,
++				evdev_usage_from(EVDEV_REL_HWHEEL_HI_RES),
++				e->value * 120);
++			break;
++		default:
++			break;
++		}
++	}
++}
++
++static const struct libinput_plugin_interface interface = {
++	.device_new = wheel_plugin_device_new,
++	.evdev_frame = wheel_plugin_evdev_frame,
++};
++
++void
++libinput_mouse_plugin_wheel_lowres(struct libinput *libinput)
++{
++	_unref_(libinput_plugin) *p =
++		libinput_plugin_new(libinput, "mouse-wheel-lowres", &interface, NULL);
++}
+diff --git a/src/libinput-plugin-mouse-wheel-lowres.h b/src/libinput-plugin-mouse-wheel-lowres.h
+new file mode 100644
+index 000000000000..9fee3ec3cb1c
+--- /dev/null
++++ b/src/libinput-plugin-mouse-wheel-lowres.h
+@@ -0,0 +1,30 @@
++/*
++ * Copyright © 2025 Red Hat, Inc.
++ *
++ * Permission is hereby granted, free of charge, to any person obtaining a
++ * copy of this software and associated documentation files (the "Software"),
++ * to deal in the Software without restriction, including without limitation
++ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
++ * and/or sell copies of the Software, and to permit persons to whom the
++ * Software is furnished to do so, subject to the following conditions:
++ *
++ * The above copyright notice and this permission notice (including the next
++ * paragraph) shall be included in all copies or substantial portions of the
++ * Software.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
++ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
++ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
++ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
++ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
++ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
++ * DEALINGS IN THE SOFTWARE.
++ */
++
++#include "config.h"
++
++#include "libinput-plugin.h"
++#include "libinput.h"
++
++void
++libinput_mouse_plugin_wheel_lowres(struct libinput *libinput);
+diff --git a/src/libinput-plugin.c b/src/libinput-plugin.c
+index c14ae33751d4..6e0f068cd45c 100644
+--- a/src/libinput-plugin.c
++++ b/src/libinput-plugin.c
+@@ -30,6 +30,7 @@
+ 
+ #include "evdev-plugin.h"
+ #include "libinput-plugin-button-debounce.h"
++#include "libinput-plugin-mouse-wheel-lowres.h"
+ #include "libinput-plugin-mouse-wheel.h"
+ #include "libinput-plugin-mtdev.h"
+ #include "libinput-plugin-private.h"
+@@ -390,6 +391,7 @@ libinput_plugin_system_load_internal_plugins(struct libinput *libinput,
+ 	libinput_tablet_plugin_proximity_timer(libinput);
+ 	libinput_tablet_plugin_eraser_button(libinput);
+ 	libinput_debounce_plugin(libinput);
++	libinput_mouse_plugin_wheel_lowres(libinput);
+ 	libinput_mouse_plugin_wheel(libinput);
+ 
+ 	/* Our own event dispatch is implemented as mini-plugin,
+-- 
+2.50.0
+
