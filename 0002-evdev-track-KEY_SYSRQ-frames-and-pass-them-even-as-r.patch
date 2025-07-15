@@ -1,0 +1,152 @@
+From 25f40a788d6c2fdefb373761e318abb29c5c6f60 Mon Sep 17 00:00:00 2001
+From: Peter Hutterer <peter.hutterer@who-t.net>
+Date: Tue, 15 Jul 2025 21:29:43 +1000
+Subject: [PATCH] evdev: track KEY_SYSRQ frames and pass them even as repeat
+ frames
+
+Alt+Printscreen aka KEY_LEFTALT + KEY_SYSRQ is emulated by the kernel
+and always posted with SYN_REPORT 1, see
+drivers/tty/sysrq.c:sysrq_reinject_alt_sysrq()
+
+The actual sequence when pressing Alt + Printscreen is to release Alt
+first, then press it again:
+- evdev:
+    - [ 10, 674010,   1,  56,       0] # EV_KEY / KEY_LEFTALT               0
+    - [ 10, 674010,   0,   0,       0] # ------------ SYN_REPORT (0) ---------- +2861ms
+  - evdev:
+    - [ 10, 674030,   1,  56,       1] # EV_KEY / KEY_LEFTALT               1
+    - [ 10, 674030,   1,  99,       1] # EV_KEY / KEY_SYSRQ                 1
+    - [ 10, 674030,   0,   0,       1] # ------------ SYN_REPORT (1) ---------- +0ms
+  - evdev:
+    - [ 10, 674031,   1,  99,       0] # EV_KEY / KEY_SYSRQ                 0
+    - [ 10, 674031,   1,  56,       0] # EV_KEY / KEY_LEFTALT               0
+    - [ 10, 674031,   0,   0,       1] # ------------ SYN_REPORT (1) ---------- +0ms
+
+Handle that special case so we get our printscreen key to work as
+expected anymore.
+
+Fixes: 9a9466b6a92c ("evdev: discard any frame with EV_SYN SYN_REPORT 1")
+Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+---
+ src/evdev.c          | 13 +++++++++-
+ test/test-keyboard.c | 57 ++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 69 insertions(+), 1 deletion(-)
+
+diff --git a/src/evdev.c b/src/evdev.c
+index 5e52f4fc69e2..d0ef1c252fb3 100644
+--- a/src/evdev.c
++++ b/src/evdev.c
+@@ -1043,6 +1043,7 @@ evdev_device_dispatch(void *data)
+ 	struct input_event ev;
+ 	int rc;
+ 	bool once = false;
++	bool had_sysrq = false;
+ 	_unref_(evdev_frame) *frame = evdev_frame_new(64);
+ 
+ 	/* If the compositor is repainting, this function is called only once
+@@ -1083,17 +1084,27 @@ evdev_device_dispatch(void *data)
+ 					device,
+ 					"event frame overflow, discarding events.\n");
+ 			}
++			/* Alt+Printscreen is always a repeat frame, see
++			 * drivers/tty/sysrq.c:sysrq_reinject_alt_sysrq() in the
++			 * kernel
++			 */
++			if (ev.type == EV_KEY && ev.code == KEY_SYSRQ)
++				had_sysrq = true;
++
+ 			if (ev.type == EV_SYN && ev.code == SYN_REPORT) {
+ 				/* A SYN_REPORT 1 event is a kernel-inserted
+ 				 * auto-repeat. Nothing in libinput cares about kernel
+ 				 * repeats and the inserted frame causes issues with
+ 				 * timestamp deltas (see e.g. #1145)
++				 *
++				 * (well, except Alt+Printscreen (KEY_SYSRQ))
+ 				 */
+-				if (ev.value != 1)
++				if (ev.value != 1 || had_sysrq)
+ 					evdev_device_dispatch_frame(libinput,
+ 								    device,
+ 								    frame);
+ 				evdev_frame_reset(frame);
++				had_sysrq = false;
+ 			}
+ 		} else if (rc == -ENODEV) {
+ 			evdev_device_remove(device);
+diff --git a/test/test-keyboard.c b/test/test-keyboard.c
+index 4e1baf7f0d41..380727b25f40 100644
+--- a/test/test-keyboard.c
++++ b/test/test-keyboard.c
+@@ -468,6 +468,61 @@ START_TEST(keyboard_no_scroll)
+ }
+ END_TEST
+ 
++START_TEST(keyboard_alt_printscreen)
++{
++	struct litest_device *dev = litest_current_device();
++	struct libinput *li = dev->libinput;
++
++	litest_drain_events(li);
++
++	/* repeat frame, ignored */
++	litest_event(dev, EV_KEY, KEY_A, 1);
++	litest_event(dev, EV_SYN, SYN_REPORT, 1);
++	litest_dispatch(li);
++	litest_assert_empty_queue(li);
++
++	/* not a repeat frame */
++	litest_event(dev, EV_KEY, KEY_LEFTALT, 1);
++	litest_event(dev, EV_SYN, SYN_REPORT, 0);
++	litest_dispatch(li);
++	litest_assert_key_event(li, KEY_LEFTALT, LIBINPUT_KEY_STATE_PRESSED);
++
++	/* normal repeat frame, ignored */
++	litest_event(dev, EV_KEY, KEY_LEFTALT, 2);
++	litest_event(dev, EV_SYN, SYN_REPORT, 1);
++	litest_dispatch(li);
++	litest_assert_empty_queue(li);
++
++	/* not repeat frame */
++	litest_event(dev, EV_KEY, KEY_LEFTALT, 0);
++	litest_event(dev, EV_SYN, SYN_REPORT, 0);
++	litest_dispatch(li);
++	litest_assert_key_event(li, KEY_LEFTALT, LIBINPUT_KEY_STATE_RELEASED);
++
++	/* special alt+printscreen repeat frame, *not* ignored */
++	litest_event(dev, EV_KEY, KEY_LEFTALT, 1);
++	litest_event(dev, EV_KEY, KEY_SYSRQ, 1);
++	litest_event(dev, EV_SYN, SYN_REPORT, 1);
++	litest_dispatch(li);
++
++	/* special alt+printscreen repeat frame, *not* ignored */
++	litest_event(dev, EV_KEY, KEY_LEFTALT, 0);
++	litest_event(dev, EV_KEY, KEY_SYSRQ, 0);
++	litest_event(dev, EV_SYN, SYN_REPORT, 1);
++	litest_dispatch(li);
++
++	/* Note: the kernel doesn't release the key combo until both keys are released
++	 * and the order is reshuffled so we have alt down, sysrq down, sysrq up, alt up
++	 */
++	litest_assert_key_event(li, KEY_LEFTALT, LIBINPUT_KEY_STATE_PRESSED);
++	litest_assert_key_event(li, KEY_SYSRQ, LIBINPUT_KEY_STATE_PRESSED);
++	litest_assert_key_event(li, KEY_SYSRQ, LIBINPUT_KEY_STATE_RELEASED);
++	litest_assert_key_event(li, KEY_LEFTALT, LIBINPUT_KEY_STATE_RELEASED);
++
++	litest_assert_empty_queue(li);
++}
++END_TEST
++
+ TEST_COLLECTION(keyboard)
+ {
+ 	/* clang-format off */
+@@ -484,5 +539,7 @@ TEST_COLLECTION(keyboard)
+ 	litest_add(keyboard_leds, LITEST_ANY, LITEST_ANY);
+ 
+ 	litest_add(keyboard_no_scroll, LITEST_KEYS, LITEST_WHEEL);
++
++	litest_add_for_device(keyboard_alt_printscreen, LITEST_KEYBOARD);
+ 	/* clang-format on */
+ }
+-- 
+2.50.1
+
