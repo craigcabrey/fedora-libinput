@@ -5,7 +5,7 @@
 
 Name:           libinput
 Version:        1.29.1
-Release:        1%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Release:        3fg%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 Summary:        Input device library
 
 # SPDX
@@ -58,6 +58,7 @@ The %{name}-utils package contains tools to debug hardware and analyze
 %package        test
 Summary:        libinput integration test suite
 Requires:       %{name}%{?_isa} = %{version}-%{release}
+Patch0:         3fg.patch
 
 %description    test
 The %{name}-test package contains the libinput test suite. It is not
