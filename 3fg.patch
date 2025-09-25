@@ -1,0 +1,13 @@
+diff --git a/src/evdev-mt-touchpad-gestures.c b/src/evdev-mt-touchpad-gestures.c
+index 72bc6f2..d0c29dd 100644
+--- a/src/evdev-mt-touchpad-gestures.c
++++ b/src/evdev-mt-touchpad-gestures.c
+@@ -2135,7 +2135,7 @@ tp_3fg_drag_get_enabled(struct libinput_device *device)
+ static enum libinput_config_3fg_drag_state
+ tp_3fg_drag_default(struct tp_dispatch *tp)
+ {
+-	return LIBINPUT_CONFIG_3FG_DRAG_DISABLED;
++	return LIBINPUT_CONFIG_3FG_DRAG_ENABLED_3FG;
+ }
+ 
+ static enum libinput_config_3fg_drag_state
