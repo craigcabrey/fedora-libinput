@@ -1,0 +1,58 @@
+name: Sync Fedora 42
+
+on:
+  workflow_dispatch:
+  schedule:
+    # every day at 1 AM UTC
+    - cron: '0 1 * * *'
+
+jobs:
+  rebase:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          # We need to fetch all history for all branches and tags
+          fetch-depth: 0
+          # This token is required to push changes back to the repository
+          token: ${{ secrets.GH_PAT || secrets.GITHUB_TOKEN }}
+
+      - name: Configure Git
+        run: |
+          git config user.name "GitHub Actions Bot"
+          git config user.email "github-actions-bot@users.noreply.github.com"
+
+      - name: Rebase branch
+        run: |
+          BRANCH_TO_REBASE="f42"
+
+          # Replace with the URL of the upstream repository
+          UPSTREAM_REPO="https://src.fedoraproject.org/rpms/libinput.git"
+
+          # Replace 'main' with the branch you want to rebase against from the upstream repository
+          UPSTREAM_BRANCH="f42"
+
+          # Checkout the branch to be rebased
+          git checkout $BRANCH_TO_REBASE
+
+          # Add the upstream repository as a remote
+          git remote add upstream $UPSTREAM_REPO
+
+          # Fetch the latest changes from the upstream repository
+          git fetch upstream $UPSTREAM_BRANCH
+
+          echo "Rebasing $BRANCH_TO_REBASE against upstream/$UPSTREAM_BRANCH..."
+
+          # Perform the rebase
+          if git rebase upstream/$UPSTREAM_BRANCH; then
+            echo "Rebase successful. Force-pushing to origin..."
+            # Force-push the rebased branch to your repository
+            # Use --force-with-lease for a safer push
+            git push origin $BRANCH_TO_REBASE --force-with-lease
+          else
+            echo "Rebase failed. There might be conflicts. Aborting rebase."
+            git rebase --abort
+            exit 1
+          fi
